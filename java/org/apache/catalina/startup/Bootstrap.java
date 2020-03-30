@@ -70,7 +70,7 @@ public final class Bootstrap {
         File homeFile = null;
         //如果catalina——home-prop  不为null
         if (home != null) {
-            //建立这个文件夹
+            //建立这个文件夹对象
             File f = new File(home);
             try {
                 homeFile = f.getCanonicalFile();
@@ -80,10 +80,9 @@ public final class Bootstrap {
         }
 
         if (homeFile == null) {
-            // First fall-back. See if current directory is a bin directory
-            // in a normal Tomcat install
+            //生成一个路径 当前项目所在文件夹/bootstrap.jar
             File bootstrapJar = new File(userDir, "bootstrap.jar");
-
+            //判断在当前项目根目录下是否存在一个bootstrap的jar包
             if (bootstrapJar.exists()) {
                 File f = new File(userDir, "..");
                 try {
@@ -93,34 +92,41 @@ public final class Bootstrap {
                 }
             }
         }
-
+        //如果 系统变量中没有CATALINA_HOME_PROP 配置，且 在根项目下不存在 bootstrap.jar 包文件
         if (homeFile == null) {
-            // Second fall-back. Use current directory
+            // 那么利用当前项目路径生成一个对象
             File f = new File(userDir);
             try {
+                //获取当前路径 的标准地址
                 homeFile = f.getCanonicalFile();
             } catch (IOException ioe) {
                 homeFile = f.getAbsoluteFile();
             }
         }
-
+        //从此以后 Bootstrap这个类的catalinaHomeFile属性 值 就是当前项目根路径了
         catalinaHomeFile = homeFile;
+        //然后在系统变量中 把CATALINA_HOME_PROP 的值 设置为刚刚配置的项目根路径
         System.setProperty(
                 Globals.CATALINA_HOME_PROP, catalinaHomeFile.getPath());
-
-        // Then base
+        //去系统变量中取CATALINA_BASE_PROP 这个变量 赋值给字符串base
         String base = System.getProperty(Globals.CATALINA_BASE_PROP);
+        //如果base位null 也就是系统环境变量中没有CATALINA_BASE_PROP 这个变量
         if (base == null) {
+            //那么 直接给他 把catalinaBaseFile设置成和catalinaHomeFile一样的值
             catalinaBaseFile = catalinaHomeFile;
         } else {
+            //如果存在 那么根据系统变量取出来的值生成一个对象
             File baseFile = new File(base);
             try {
+                //获取 当前系统标准的路径结构
                 baseFile = baseFile.getCanonicalFile();
             } catch (IOException ioe) {
                 baseFile = baseFile.getAbsoluteFile();
             }
+            //将值赋给 Bootstrap的catalinaBaseFile 属性
             catalinaBaseFile = baseFile;
         }
+        //给系统变量设置CATALINA_BASE_PROP 属性，无则加上，有则覆盖
         System.setProperty(
                 Globals.CATALINA_BASE_PROP, catalinaBaseFile.getPath());
     }
@@ -161,14 +167,18 @@ public final class Bootstrap {
     private ClassLoader createClassLoader(String name, ClassLoader parent)
         throws Exception {
         //每次加载类的时候要先确定一下 这个类的静态代码块的初始化问题
+
+        //例如这个 类 你要先去查看一下 CatalinaProperties 的静态代码块，
+        //这个类的静态代码块 作用就是从 catalina.config 配置文件中 读取配置 添加到Properties 静态对象中缓存
+        //这个方法就是从 Properties静态对象中 获取 ${name}.loader的配置
         String value = CatalinaProperties.getProperty(name + ".loader");
         if ((value == null) || (value.equals("")))
             return parent;
-
+        //将读取出来的配置进行一些处理 请点进方法看处理内容
         value = replace(value);
-
+        //声明一个Repository 列表 Repository这个类是Tomcat 自己定义的
         List<Repository> repositories = new ArrayList<>();
-
+        //里面全是分割好了的配置文件，点方法进去看详情
         String[] repositoryPaths = getPaths(value);
 
         for (String repository : repositoryPaths) {
@@ -182,18 +192,22 @@ public final class Bootstrap {
                 // Ignore
             }
 
-            // Local repository
+            // 如果这个配置文件 包含*.jar
             if (repository.endsWith("*.jar")) {
+                //那就把*.jar去掉 类型填为GLOB
                 repository = repository.substring
                     (0, repository.length() - "*.jar".length());
                 repositories.add(new Repository(repository, RepositoryType.GLOB));
-            } else if (repository.endsWith(".jar")) {
+            } // 如果这个配置文件 包含.jar
+            else if (repository.endsWith(".jar")) {
+                //那就直接加入 list  但类型 填为JAR
                 repositories.add(new Repository(repository, RepositoryType.JAR));
             } else {
+                //那就直接加入 list  类型 填为DIR
                 repositories.add(new Repository(repository, RepositoryType.DIR));
             }
         }
-
+        //将处理完的配置文件后的List 放入类加载工厂里面
         return ClassLoaderFactory.createClassLoader(repositories, parent);
     }
 
@@ -208,22 +222,36 @@ public final class Bootstrap {
         // Implementation is copied from ClassLoaderLogManager.replace(),
         // but added special processing for catalina.home and catalina.base.
         String result = str;
+        //获取到${在str字符串中的出现为位置
         int pos_start = str.indexOf("${");
+        //如果${在字符串中出现过那么post_start就一定大于等于0
         if (pos_start >= 0) {
+            //声明一个StringBuilder 对象
             StringBuilder builder = new StringBuilder();
+            //设置post_end 默认值为-1
             int pos_end = -1;
+            //只要pos_start还大于零就进行循环
             while (pos_start >= 0) {
+                //给StringBuilder添加截取的字符串， 第一次从0截取到1 看样子截取了一个"
                 builder.append(str, pos_end + 1, pos_start);
+                //改变post_end 的值 从字符串${的下一个字符位(包含下一个字符)往后查找第一个}出现的位置 返回}在字符串中所在位置
                 pos_end = str.indexOf('}', pos_start + 2);
+                //如果没找到
                 if (pos_end < 0) {
+                    //pos_end =起始位置减一
                     pos_end = pos_start - 1;
+                    //跳出循环
                     break;
                 }
+                //截取str字符串 从${开始  到}结束  也就是${}里面的内容
                 String propName = str.substring(pos_start + 2, pos_end);
                 String replacement;
+                //如果${}里面是空的
                 if (propName.length() == 0) {
                     replacement = null;
-                } else if (Globals.CATALINA_HOME_PROP.equals(propName)) {
+                } else if //如果里面写的是catalina
+                (Globals.CATALINA_HOME_PROP.equals(propName)) {
+                    //那么就
                     replacement = getCatalinaHome();
                 } else if (Globals.CATALINA_BASE_PROP.equals(propName)) {
                     replacement = getCatalinaBase();
@@ -557,40 +585,50 @@ public final class Bootstrap {
 
     // Protected for unit testing
     protected static String[] getPaths(String value) {
-
+        //声明一个String List容器
         List<String> result = new ArrayList<>();
+        //根据正则表达式
         Matcher matcher = PATH_PATTERN.matcher(value);
-
+        //查找字符串中所有符合的字符串
         while (matcher.find()) {
+            //将字符串截取下来
             String path = value.substring(matcher.start(), matcher.end());
-
+            //去掉空格
             path = path.trim();
+            //如果截取下来后啥也没有
             if (path.length() == 0) {
                 continue;
             }
-
+            //将取出来的字符串 拿到获取第一个字符
             char first = path.charAt(0);
+            //将取出来的字符串 拿到最后一个字符
             char last = path.charAt(path.length() - 1);
-
+            //如果第一个字符和最后一个字符是" 并且 取出来的字符串长度大于一
             if (first == '"' && last == '"' && path.length() > 1) {
+                //那么 去掉两边的"
                 path = path.substring(1, path.length() - 1);
+                //然后去掉空格
                 path = path.trim();
+                //如果没东西了 就继续
                 if (path.length() == 0) {
                     continue;
                 }
-            } else if (path.contains("\"")) {
+            } //如果字符串中存在\反斜杠
+            else if (path.contains("\"")) {
                 // Unbalanced quotes
                 // Too early to use standard i18n support. The class path hasn't
                 // been configured.
+                //直接抛出异常
                 throw new IllegalArgumentException(
                         "The double quote [\"] character only be used to quote paths. It must " +
                         "not appear in a path. This loader path is not valid: [" + value + "]");
             } else {
                 // Not quoted - NO-OP
             }
-
+            //将取出来的字符串加入到result中
             result.add(path);
         }
+        //将List容器转换成数组返回给方法调用者
         return result.toArray(new String[result.size()]);
     }
 }

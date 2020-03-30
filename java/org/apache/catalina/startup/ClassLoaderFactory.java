@@ -157,13 +157,14 @@ public final class ClassLoaderFactory {
 
         // Construct the "class path" for this class loader
         Set<URL> set = new LinkedHashSet<>();
-
+        //先确定repositories容器不为空
         if (repositories != null) {
             for (Repository repository : repositories)  {
                 if (repository.getType() == RepositoryType.URL) {
                     URL url = buildClassLoaderUrl(repository.getLocation());
                     if (log.isDebugEnabled())
                         log.debug("  Including URL " + url);
+                    //把url丢入向量当中
                     set.add(url);
                 } else if (repository.getType() == RepositoryType.DIR) {
                     File directory = new File(repository.getLocation());
@@ -280,12 +281,13 @@ public final class ClassLoaderFactory {
      * org.apache.tomcat.util.buf.UriUtil but that class is not visible until
      * after the class loaders have been constructed.
      */
+    //传入文件夹路径 返回一个URL
     private static URL buildClassLoaderUrl(String urlString) throws MalformedURLException {
         // URLs passed to class loaders may point to directories that contain
         // JARs. If these URLs are used to construct URLs for resources in a JAR
         // the URL will be used as is. It is therefore necessary to ensure that
         // the sequence "!/" is not present in a class loader URL.
-        String result = urlString.replaceAll("!/", "%21/");
+            String result = urlString.replaceAll("!/", "%21/");
         return new URL(result);
     }
 
@@ -306,7 +308,9 @@ public final class ClassLoaderFactory {
     }
 
     public static class Repository {
+        //文件夹路径
         private final String location;
+        //文件夹类型
         private final RepositoryType type;
 
         public Repository(String location, RepositoryType type) {
