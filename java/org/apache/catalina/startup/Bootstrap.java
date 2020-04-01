@@ -149,12 +149,15 @@ public final class Bootstrap {
     //初始类加载器
     private void initClassLoaders() {
         try {
+            //BootStrap的配置文件 common.loade 都由 此方法初始化  由路径生成的URL数组 交由URLClassLoader 生成ClassLoader对象
             commonLoader = createClassLoader("common", null);
             if (commonLoader == null) {
                 // no config file, default to this loader - we might be in a 'single' env.
                 commonLoader = this.getClass().getClassLoader();
             }
+            //读取配置文件的server.load 由 commonLoader 加载
             catalinaLoader = createClassLoader("server", commonLoader);
+            //读取配置文件的shareds.load 由 commonLoader 加载
             sharedLoader = createClassLoader("shared", commonLoader);
         } catch (Throwable t) {
             handleThrowable(t);
@@ -277,9 +280,9 @@ public final class Bootstrap {
      * @throws Exception Fatal initialization error
      */
     public void init() throws Exception {
-
+        // 这个初始化虽然配置了 但因为 lib 下没有相关jar包 相当于啥也没做
         initClassLoaders();
-
+        //2020 年 3月 31 日 
         Thread.currentThread().setContextClassLoader(catalinaLoader);
 
         SecurityClassLoad.securityClassLoad(catalinaLoader);
