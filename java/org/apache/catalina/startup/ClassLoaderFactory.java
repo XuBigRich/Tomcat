@@ -249,7 +249,7 @@ public final class ClassLoaderFactory {
             for (int i = 0; i < array.length; i++) {
                 log.debug("  location " + i + " is " + array[i]);
             }
-        // 匿名函数
+        // 匿名函数  使用URLClassLoader加载器 将预先准备好的类加载入jvm并返回类加载器实例对象
         return AccessController.doPrivileged(
                 new PrivilegedAction<URLClassLoader>() {
                     @Override
