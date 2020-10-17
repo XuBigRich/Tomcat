@@ -138,6 +138,8 @@ public class RulesBase implements Rules {
 
 
     /**
+     *
+     * 将规则名称与规则传入
      * Register a new Rule instance matching the specified pattern.
      *
      * @param pattern Nesting pattern to be matched for this Rule
@@ -147,18 +149,24 @@ public class RulesBase implements Rules {
     public void add(String pattern, Rule rule) {
         // to help users who accidentally add '/' to the end of their patterns
         int patternLength = pattern.length();
+        //给规则名称 如果符合条件加以处理
         if (patternLength>1 && pattern.endsWith("/")) {
             pattern = pattern.substring(0, patternLength-1);
         }
 
-
+        //从缓存中取出 所有以pattern 为名的规则list
         List<Rule> list = cache.get(pattern);
+        //如果list为null
         if (list == null) {
+//            建立一个list
             list = new ArrayList<>();
             cache.put(pattern, list);
         }
+        //将刚刚的rule 中放入 list
         list.add(rule);
+        //rulus集合添加刚才的rule
         rules.add(rule);
+        //
         if (this.digester != null) {
             rule.setDigester(this.digester);
         }

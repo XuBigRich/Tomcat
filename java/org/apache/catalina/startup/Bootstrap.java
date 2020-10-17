@@ -386,7 +386,7 @@ public final class Bootstrap {
         if (catalinaDaemon == null) {
             init();
         }
-
+        //获取org.apache.catalina.startup.Catalina.Java中start 无参 方法
         Method method = catalinaDaemon.getClass().getMethod("start", (Class[]) null);
         method.invoke(catalinaDaemon, (Object[]) null);
     }

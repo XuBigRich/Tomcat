@@ -79,6 +79,8 @@ import org.xml.sax.helpers.AttributesImpl;
  * <p><strong>IMPLEMENTATION NOTE</strong> - A bug in Xerces 2.0.2 prevents
  * the support of XML schema. You need Xerces 2.1/2.3 and up to make
  * this class working with XML schema</p>
+ *
+ * xml解析器 继承自jdk DefaultHandler2类  提供xml解析方案
  */
 public class Digester extends DefaultHandler2 {
 
@@ -88,9 +90,12 @@ public class Digester extends DefaultHandler2 {
     private static boolean propertySourceSet = false;
     protected static final StringManager sm = StringManager.getManager(Digester.class);
 
+    //这个静态代码块 在Catalina启动时并没有起到作用 因为相应的 环境变量并没有配置
     static {
+        //获取jvm系统变量中org.apache.tomcat.util.digester.PROPERTY_SOURCE的属性变量  第一次加载这类 肯定没有设置
         String className = System.getProperty("org.apache.tomcat.util.digester.PROPERTY_SOURCE");
         IntrospectionUtils.PropertySource source = null;
+        //当被设置过时
         if (className != null) {
             ClassLoader[] cls = new ClassLoader[] { Digester.class.getClassLoader(),
                     Thread.currentThread().getContextClassLoader() };
@@ -223,6 +228,7 @@ public class Digester extends DefaultHandler2 {
 
     /**
      * The SAXParserFactory that is created the first time we need it.
+     *
      */
     protected SAXParserFactory factory = null;
 
@@ -293,6 +299,7 @@ public class Digester extends DefaultHandler2 {
      * <code>Rule</code> instances and associated matching policy.  If not
      * established before the first rule is added, a default implementation
      * will be provided.
+     * 
      */
     protected Rules rules = null;
 
@@ -339,7 +346,9 @@ public class Digester extends DefaultHandler2 {
 
 
     public Digester() {
+        //将propertySourceSet设置为true
         propertySourceSet = true;
+        //初始化时propertySource 并没有被初始化 所以为null
         if (propertySource != null) {
             source = new IntrospectionUtils.PropertySource[] { propertySource, source[0] };
         }
@@ -475,6 +484,7 @@ public class Digester extends DefaultHandler2 {
      * @throws ParserConfigurationException Error creating parser
      * @throws SAXNotSupportedException Error creating parser
      * @throws SAXNotRecognizedException Error creating parser
+     *
      */
     public SAXParserFactory getFactory() throws SAXNotRecognizedException, SAXNotSupportedException,
             ParserConfigurationException {
@@ -650,6 +660,7 @@ public class Digester extends DefaultHandler2 {
     /**
      * @return the SAXParser we will use to parse the input stream.  If there
      * is a problem creating the parser, return <code>null</code>.
+     * 给digester（xml解析器）设置parser设置值
      */
     public SAXParser getParser() {
 
@@ -696,12 +707,18 @@ public class Digester extends DefaultHandler2 {
      * rules collection and associated matching policy.  If none has been
      * established, a default implementation will be created and returned.
      * @return the rules
+     *
+     * 返回一个Rules实例（RulesBase它是一个 Rule map 由 key value 构成）
      */
     public Rules getRules() {
+        //如果解析的规则属性 为null
         if (this.rules == null) {
+            //建立一个规则（RulesBase继承自rules 它类似与一个map 里面有很多名称规则）
             this.rules = new RulesBase();
+            //并且将规则设置解析器为当前对象
             this.rules.setDigester(this);
         }
+        //返回当前解析器 的规则
         return this.rules;
     }
 
@@ -751,6 +768,7 @@ public class Digester extends DefaultHandler2 {
 
 
     /**
+     *
      * Set the validating parser flag.  This must be called before
      * <code>parse()</code> is called the first time.
      *
@@ -834,7 +852,7 @@ public class Digester extends DefaultHandler2 {
         if (reader == null) {
             reader = getParser().getXMLReader();
         }
-
+        //设置reader
         reader.setDTDHandler(this);
         reader.setContentHandler(this);
 
@@ -1491,6 +1509,7 @@ public class Digester extends DefaultHandler2 {
      * @exception SAXException if a parsing exception occurs
      */
     public Object parse(InputSource input) throws IOException, SAXException {
+        //设置configured参数标识 没加载过时为false 加载过为true
         configure();
         getXMLReader().parse(input);
         return root;
@@ -1554,22 +1573,27 @@ public class Digester extends DefaultHandler2 {
      *
      * @param pattern Element matching pattern
      * @param rule Rule to be registered
+     *
+     *             添加规则，给Rule 设置  传入规则名称，与规则
      */
     public void addRule(String pattern, Rule rule) {
-
+        //给规则设置规则解析器 为当前对象
         rule.setDigester(this);
+        //获得RulesBase 将规则名称与规则放入 RulesBase中
         getRules().add(pattern, rule);
 
     }
 
 
     /**
+     *
+     *
      * Register a set of Rule instances defined in a RuleSet.
      *
      * @param ruleSet The RuleSet instance to configure from
      */
     public void addRuleSet(RuleSet ruleSet) {
-
+        //不出意外为null
         String oldNamespaceURI = getRuleNamespaceURI();
         @SuppressWarnings("deprecation")
         String newNamespaceURI = ruleSet.getNamespaceURI();
@@ -1581,6 +1605,7 @@ public class Digester extends DefaultHandler2 {
             }
         }
         setRuleNamespaceURI(newNamespaceURI);
+        //给ruleSet 有可能为（org.apache.catalina.ha.ClusterRuleSet） 设置添加一个RuleInstances 为当前对象
         ruleSet.addRuleInstances(this);
         setRuleNamespaceURI(oldNamespaceURI);
     }
@@ -1670,9 +1695,11 @@ public class Digester extends DefaultHandler2 {
      * @param attributeName Attribute name that optionally overrides
      *  the default Java class name to be created
      * @see ObjectCreateRule
+     *
+     * 添加xml解析规则，
      */
     public void addObjectCreate(String pattern, String className, String attributeName) {
-
+        //传入规则名称  与ObjectCreateRule类型的 规则 给 addrule方法
         addRule(pattern, new ObjectCreateRule(className, attributeName));
 
     }
@@ -1690,7 +1717,7 @@ public class Digester extends DefaultHandler2 {
      * @see SetNextRule
      */
     public void addSetNext(String pattern, String methodName, String paramType) {
-
+        //传入规则名称  与SetNextRule类型的 规则 给 addrule方法
         addRule(pattern, new SetNextRule(methodName, paramType));
 
     }
@@ -1837,6 +1864,7 @@ public class Digester extends DefaultHandler2 {
     protected void configure() {
 
         // Do not configure more than once
+        //默认情况下configured为false
         if (configured) {
             return;
         }
@@ -1845,6 +1873,7 @@ public class Digester extends DefaultHandler2 {
         saxLog = LogFactory.getLog("org.apache.tomcat.util.digester.Digester.sax");
 
         // Set the configuration flag to avoid repeating
+        //设置configured为true 表示已经加载过配置了
         configured = true;
     }
 
