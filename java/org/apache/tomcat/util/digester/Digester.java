@@ -81,6 +81,28 @@ import org.xml.sax.helpers.AttributesImpl;
  * this class working with XML schema</p>
  *
  * xml解析器 继承自jdk DefaultHandler2类  提供xml解析方案
+ * DefaultHandler2这个类非常有意思 他继承了很多接口 它是xml处理集大成者
+ * 他继承的类有：　DTDHandler接口
+ * 　DTDHandler用于接收基本的DTD相关事件的通知。该接口位于org.xml.sax包中。此接口仅包括DTD事件的注释和未解析的实体声明部分。
+ * SAX解析器可按任何顺序报告这些事件，而不管声明注释和未解析实体时所采用的顺序；但是，必须在文档处理程序的startDocument()事件之后，
+ * 在第一个startElement()事件之前报告所有的DTD事件。
+ * 　DTDHandler接口包括以下两个方法
+ * 　　void startDocumevoid notationDecl(String name, String publicId, String systemId) nt()
+ * 　　void unparsedEntityDecl(String name, String publicId, String systemId, String notationName)
+ * 　　EntityResolver接口
+ * 　　EntityResolver接口是用于解析实体的基本接口，该接口位于org.xml.sax包中。
+ * 　　该接口只有一个方法，如下：
+ * 　　public InputSource resolveEntity(String publicId, String systemId)
+ * 　　解析器将在打开任何外部实体前调用此方法。此类实体包括在DTD内引用的外部DTD子集和外部参数实体和在文档元素内引用的外部通用实体等。
+ * 如果SAX应用程序需要实现自定义处理外部实体，则必须实现此接口。
+ *
+ * 　　ErrorHandler接口
+ * 　　ErrorHandler接口是SAX错误处理程序的基本接口。如果SAX应用程序需要实现自定义的错误处理，则它必须实现此接口，
+ *      然后解析器将通过此接口报告所有的错误和警告。
+ * 　　该接口的方法如下：
+ * 　　void error(SAXParseException exception) //不同级别的处理方式
+ * 　　void fatalError(SAXParseException exception)
+ * 　　void warning(SAXParseException exception)
  */
 public class Digester extends DefaultHandler2 {
 
@@ -270,6 +292,7 @@ public class Digester extends DefaultHandler2 {
 
     /**
      * The SAXParser we will use to parse the input stream.
+     * 这个属性 可以将xml转换为 input 流
      */
     protected SAXParser parser = null;
 
@@ -283,6 +306,7 @@ public class Digester extends DefaultHandler2 {
 
     /**
      * The XMLReader used to parse digester rules.
+     * com.sun.org.apache.xerces.internal.jaxp.SAXParserImpl
      */
     protected XMLReader reader = null;
 
@@ -299,7 +323,7 @@ public class Digester extends DefaultHandler2 {
      * <code>Rule</code> instances and associated matching policy.  If not
      * established before the first rule is added, a default implementation
      * will be provided.
-     * 
+     *
      */
     protected Rules rules = null;
 
@@ -488,16 +512,17 @@ public class Digester extends DefaultHandler2 {
      */
     public SAXParserFactory getFactory() throws SAXNotRecognizedException, SAXNotSupportedException,
             ParserConfigurationException {
-
+        //如果xml解析器的工厂类为null 那么 就从jdk中实例化出来一个工厂类赋给digester 的factory属性
         if (factory == null) {
+            //在这个地方生成了xml解析器 工厂类  使用的 com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl
             factory = SAXParserFactory.newInstance();
-
+            //告诉这个工厂生产出来的解析器 需要去解析root含有的 xmlns 就给他设置为true 但是 这个地方默认为false
             factory.setNamespaceAware(namespaceAware);
             // Preserve xmlns attributes
             if (namespaceAware) {
                 factory.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
             }
-
+            //这个地方不知道干嘛的 ，反正默认是false 所以不会走下面的方法
             factory.setValidating(validating);
             if (validating) {
                 // Enable DTD validation
@@ -660,16 +685,18 @@ public class Digester extends DefaultHandler2 {
     /**
      * @return the SAXParser we will use to parse the input stream.  If there
      * is a problem creating the parser, return <code>null</code>.
-     * 给digester（xml解析器）设置parser设置值
+     * 给digester实例 的parser属性 设置值（parser属性是真正的xml解析器它可以将xml转换为stream（流））
      */
     public SAXParser getParser() {
 
         // Return the parser we already created (if any)
+        //先判断parser属性是否为null 如果不为null 就使用parser
         if (parser != null) {
             return parser;
         }
 
         // Create a new parser
+        //如果为null 就从工厂中创建一个 SAXParser实例对象
         try {
             parser = getFactory().newSAXParser();
         } catch (Exception e) {
@@ -847,6 +874,7 @@ public class Digester extends DefaultHandler2 {
      * parser that contains a schema with a DTD.
      * @return the XML reader
      * @exception SAXException if no XMLReader can be instantiated
+     * 该方法为reader赋值，reader属性主要用于将xml转换为inpustream流  其使用的xml解析类 是 com.sun.org.apache.xerces.internal.jaxp.SAXParserImpl
      */
     public XMLReader getXMLReader() throws SAXException {
         if (reader == null) {
@@ -1161,6 +1189,7 @@ public class Digester extends DefaultHandler2 {
      * Process notification of the beginning of the document being reached.
      *
      * @exception SAXException if a parsing error is to be reported
+     * 开始对文档xml进行处理
      */
     @SuppressWarnings("deprecation")
     @Override
@@ -1169,7 +1198,7 @@ public class Digester extends DefaultHandler2 {
         if (saxLog.isDebugEnabled()) {
             saxLog.debug("startDocument()");
         }
-
+        //locator属性 应用程序可以使用该对象来获取XML源文档中任何其他SAX事件的位置。
         if (locator instanceof Locator2) {
             if (root instanceof DocumentProperties.Charset) {
                 String enc = ((Locator2) locator).getEncoding();
@@ -1204,6 +1233,7 @@ public class Digester extends DefaultHandler2 {
      * @param list The attributes attached to the element. If there are
      *   no attributes, it shall be an empty Attributes object.
      * @exception SAXException if a parsing error is to be reported
+     * ElementNode开始对文档的与阿苏进行处理
      */
     @Override
     public void startElement(String namespaceURI, String localName, String qName, Attributes list)
@@ -1215,40 +1245,61 @@ public class Digester extends DefaultHandler2 {
         }
 
         // Parse system properties
+        //将Attributes对象赋值给list属性 由此 list包含当前元素的所有属性
         list = updateAttributes(list);
 
+        //输出第一个与第二个参数查看到底传进来的是啥  （最终得知不常用）
+//        System.out.println(namespaceURI+" "+localName);
+        //解析xml传入的xml列表
+//        String a=list.getValue("port");
+//        String b=list.getValue("shutdown");
+//        String c=list.getValue("aaa");
+//        System.out.println(a+" "+b+" "+c);
         // Save the body text accumulated for our surrounding element
         bodyTexts.push(bodyText);
         bodyText = new StringBuilder();
 
         // the actual element name is either in localName or qName, depending
         // on whether the parser is namespace aware
+        //将localName赋值给 name 但通常情况下 localName 是为空的
         String name = localName;
         if ((name == null) || (name.length() < 1)) {
+            //如果localName为没有值就给他设置城qName
             name = qName;
         }
 
         // Compute the current matching rule
+        //建立一个StringBuilder 第一次 为""  match 知道碰到元素结束才清空
         StringBuilder sb = new StringBuilder(match);
+        //当match没有清空的情况下，某元素下包含的元素，
+        //所以下面这个方法用以拼接某配置文件下面的元素的   例如：Server/Listener
+        //而拼接的Server/Listener 在声明解析规则时 已经预先写死 详情请看Catalina.java 319行左右 声明解析规则的相应代码
         if (match.length() > 0) {
             sb.append('/');
         }
+        //sb添加当前解析的元素名称如<Server>
         sb.append(name);
+        //此时的sb第一次为Server
         match = sb.toString();
         if (debug) {
             log.debug("  New match='" + match + "'");
         }
 
         // Fire "begin" events for all relevant rules
+        //根据规则开始匹配解析xml  通常情况下namespaceURI 是为""的
         List<Rule> rules = getRules().match(namespaceURI, match);
         matches.push(rules);
+        //判断是否存在相应元素的解析规则
         if ((rules != null) && (rules.size() > 0)) {
+            //如果存在遍历每一个元素解析规则
             for (int i = 0; i < rules.size(); i++) {
                 try {
+                    //取出来
                     Rule rule = rules.get(i);
                     if (debug) {
                         log.debug("  Fire begin() for " + rule);
                     }
+                    //开始解析  将配置文件中的类实例化 好后放入 stack 中
                     rule.begin(namespaceURI, name, list);
                 } catch (Exception e) {
                     log.error("Begin event threw exception", e);
@@ -1507,10 +1558,13 @@ public class Digester extends DefaultHandler2 {
      * @return the root object
      * @exception IOException if an input/output error occurs
      * @exception SAXException if a parsing exception occurs
+     * 解析配置文件
      */
     public Object parse(InputSource input) throws IOException, SAXException {
         //设置configured参数标识 没加载过时为false 加载过为true
         configure();
+        //重点 重点 调用com.sun.org.apache.xerces.internal.jaxp.SAXParserImpl的内部类的 JAXPSAXParser parse方法
+        //在创建SAXParserImpl时 就已经将Digester处理类放入了声明方法中
         getXMLReader().parse(input);
         return root;
     }
@@ -2007,6 +2061,7 @@ public class Digester extends DefaultHandler2 {
 
 
    /**
+    * 返回属性列表，在容器的所有属性 并将${xxx} 这种格式的xxx提取出来 返回一个Attributes对象
      * Returns an attributes list which contains all the attributes
      * passed in, with any text of form "${xxx}" in an attribute value
      * replaced by the appropriate value from the system property.
@@ -2016,12 +2071,15 @@ public class Digester extends DefaultHandler2 {
         if (list.getLength() == 0) {
             return list;
         }
-
+        //将元素属性列表放入AttributesImpl 生成一个AttributesImpl对象
         AttributesImpl newAttrs = new AttributesImpl(list);
+        //计算元素属性个数
         int nAttributes = newAttrs.getLength();
         for (int i = 0; i < nAttributes; ++i) {
+            //取出
             String value = newAttrs.getValue(i);
             try {
+                //处理一下放回  主要是处理那种${xxx}样式的属性
                 newAttrs.setValue(i, IntrospectionUtils.replaceProperties(value, null, source, getClassLoader()).intern());
             } catch (Exception e) {
                 log.warn(sm.getString("digester.failedToUpdateAttributes", newAttrs.getLocalName(i), value), e);

@@ -95,8 +95,10 @@ public class ObjectCreateRule extends Rule {
             throws Exception {
 
         // Identify the name of the class to instantiate
+        //尝试当前实例是否可以解析这个xml 重的属性，方式就是通过className尝试获取当前元素的属性 详情请看下下行
         String realClassName = className;
         if (attributeName != null) {
+            //就是这行 取到了 就说明当前元素存在 当前对象可解析的属性 如果没取到 就说嘛不可以呗
             String value = attributes.getValue(attributeName);
             if (value != null) {
                 realClassName = value;
@@ -113,8 +115,10 @@ public class ObjectCreateRule extends Rule {
         }
 
         // Instantiate the new object and push it on the context stack
+        //碰到可以解析的会走到这一步然后实例化配置文件中的类
         Class<?> clazz = digester.getClassLoader().loadClass(realClassName);
         Object instance = clazz.getConstructor().newInstance();
+        //将实例好的对象都给他放到digester中
         digester.push(instance);
     }
 

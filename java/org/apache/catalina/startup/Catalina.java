@@ -298,6 +298,7 @@ public class Catalina {
 
         // Configure the actions we will be using
         //patten 为规则名称，className 与attributename 用于建立ObjectCreateRule类型的规则实体类 Rule
+        //这表明所有的className都将由StandardServer来解析
         digester.addObjectCreate("Server",
                 "org.apache.catalina.core.StandardServer",
                 "className");
@@ -639,7 +640,7 @@ public class Catalina {
                 inputSource.setByteStream(inputStream);
                 //将当前实例放入文件解析器
                 digester.push(this);
-                //使用预先设置好的文件解析器 开始解析 配置文件
+  //重点 重点 重点              使用预先设置好的文件解析器 开始解析 配置文件 装载server 服务等 生成了xml解析器
                 digester.parse(inputSource);
             } catch (SAXParseException spe) {
                 log.warn("Catalina.start using " + getConfigFile() + ": " +
@@ -658,16 +659,20 @@ public class Catalina {
                 }
             }
         }
-
+        //给当前server设置Catalina为当前对象
         getServer().setCatalina(this);
+        //为当前server设置Catalina的家目录
         getServer().setCatalinaHome(Bootstrap.getCatalinaHomeFile());
+        //为当前server设置Catalina的Base目录 通常情况下与家目录相同
         getServer().setCatalinaBase(Bootstrap.getCatalinaBaseFile());
 
         // Stream redirection
+        //设置标准输出 标准错误输出
         initStreams();
 
         // Start the new server
         try {
+            //进行服务初始化
             getServer().init();
         } catch (LifecycleException e) {
             if (Boolean.getBoolean("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE")) {
@@ -836,7 +841,9 @@ public class Catalina {
 
     protected void initStreams() {
         // Replace System.out and System.err with a custom PrintStream
+        //设置输出
         System.setOut(new SystemLogHandler(System.out));
+        //设置错误输出
         System.setErr(new SystemLogHandler(System.err));
     }
 

@@ -199,12 +199,15 @@ public class RulesBase implements Rules {
      * @param namespaceURI Namespace URI for which to select matching rules,
      *  or <code>null</code> to match regardless of namespace URI
      * @param pattern Nesting pattern to be matched
+     *
+     * 以解析
      */
     @Override
     public List<Rule> match(String namespaceURI, String pattern) {
 
         // List rulesList = (List) this.cache.get(pattern);
         List<Rule> rulesList = lookup(namespaceURI, pattern);
+        //判断当前元素标签是否有相应的解析办法 解析规则
         if ((rulesList == null) || (rulesList.size() < 1)) {
             // Find the longest key, ie more discriminant
             String longKey = "";
@@ -256,6 +259,7 @@ public class RulesBase implements Rules {
      */
     protected List<Rule> lookup(String namespaceURI, String pattern) {
         // Optimize when no namespace URI is specified
+        //从cache取出预先缓存好的Rules 它是一个List列表
         List<Rule> list = this.cache.get(pattern);
         if (list == null) {
             return null;
