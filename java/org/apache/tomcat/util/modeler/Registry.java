@@ -101,6 +101,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
     private HashMap<String,ManagedBean> descriptorsByClass = new HashMap<>();
 
     // map to avoid duplicated searching or loading descriptors
+    //这个属性将会储存所有加载进来的包名 与包名下名为mbeans-descriptors.xml的配置文件
     private HashMap<String,URL> searchedPaths = new HashMap<>();
 
     private Object guard;
@@ -132,6 +133,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
      * @since 1.1
      */
     public static synchronized Registry getRegistry(Object key, Object guard) {
+        //
         if (registry == null) {
             registry = new Registry();
         }
@@ -558,7 +560,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         String location = null;
         String type = null;
         Object inputsource = null;
-
+        //确定一下传进来的source是URL
         if (source instanceof URL) {
             URL url = (URL) source;
             location = url.toString();
@@ -590,6 +592,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
             sourceType = "MbeansDescriptorsDigesterSource";
         }
         ModelerSource ds = getModelerSource(sourceType);
+        //放入当前对象 与type，与 解析完成之后的资源
         List<ObjectName> mbeans = ds.loadDescriptors(this, type, inputsource);
 
         return mbeans;
@@ -647,6 +650,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
      * @param classLoader The class loader
      */
     public void loadDescriptors(String packageName, ClassLoader classLoader) {
+        //将包名的.都给他替换成/
         String res = packageName.replace('.', '/');
 
         if (log.isTraceEnabled()) {
@@ -656,15 +660,16 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         if (searchedPaths.get(packageName) != null) {
             return;
         }
-
+        //扫描一下res包下是否存在名为mbeans-descriptors.xml的配置文件
         String descriptors = res + "/mbeans-descriptors.xml";
         URL dURL = classLoader.getResource(descriptors);
-
+        //如果没有就返回这个方法
         if (dURL == null) {
             return;
         }
 
         log.debug("Found " + dURL);
+        //searchedPaths将储存包名与配置文件的URL
         searchedPaths.put(packageName, dURL);
         try {
             load("MbeansDescriptorsDigesterSource", dURL, null);
@@ -707,7 +712,15 @@ public class Registry implements RegistryMBean, MBeanRegistration {
         }
     }
 
-
+    /**
+     * 获取一个ModelerSource实例 如果type为null 默认实例org.apache.tomcat.util.modeler.modules下的MbeansDescriptorsDigesterSource
+     * 注意 注意 注意
+     * 该方法默认只实例org.apache.tomcat.util.modeler.modules包下的ModelerSource类
+     * 如果要是实例其他的  则需要传入类的全路径
+     * @param type
+     * @return
+     * @throws Exception
+     */
     private ModelerSource getModelerSource(String type) throws Exception {
         if (type == null)
             type = "MbeansDescriptorsDigesterSource";

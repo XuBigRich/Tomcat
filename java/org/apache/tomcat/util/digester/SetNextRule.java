@@ -127,7 +127,9 @@ public class SetNextRule extends Rule {
     public void end(String namespace, String name) throws Exception {
 
         // Identify the objects to be used
+        //取出在栈中最后一个元素
         Object child = digester.peek(0);
+        //取出在栈中倒数第二个元素（也就是配置文件中当前元素的父元素生成的实例对象）
         Object parent = digester.peek(1);
         if (digester.log.isDebugEnabled()) {
             if (parent == null) {
@@ -142,6 +144,8 @@ public class SetNextRule extends Rule {
         }
 
         // Call the specified method
+        // 此处的methodName是在Catalina类的createStartDigester方法 digester.addSetNext中提前预设好的
+        //paramType属性也是在Catalina类的createStartDigester方法  digester.addSetNext中提前预设好的
         IntrospectionUtils.callMethod1(parent, methodName,
                 child, paramType, digester.getClassLoader());
 

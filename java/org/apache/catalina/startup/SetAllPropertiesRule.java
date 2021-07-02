@@ -64,6 +64,7 @@ public class SetAllPropertiesRule extends Rule {
             String value = attributes.getValue(i);
             if ( !excludes.containsKey(name)) {
                 if (!digester.isFakeAttribute(digester.peek(), name)
+                        //这个地方需要值得推敲 传入setProperty方法 放入 取出最后一个载入栈的元素，要解析的属性名，要解析的属性值
                         && !IntrospectionUtils.setProperty(digester.peek(), name, value)
                         && digester.getRulesValidation()) {
                     digester.getLogger().warn("[SetAllPropertiesRule]{" + digester.getMatch() +

@@ -293,18 +293,24 @@ public class Catalina {
         List<String> contextAttrs = new ArrayList<>();
         contextAttrs.add("source");
         fakeAttributes.put(StandardContext.class, contextAttrs);
+        //这个意思就是说StandardContext.class 与 Object.class都称作FakeAttributes
         digester.setFakeAttributes(fakeAttributes);
         digester.setUseContextClassLoader(true);
 
         // Configure the actions we will be using
-        //patten 为规则名称，className 与attributename 用于建立ObjectCreateRule类型的规则实体类 Rule
+        //patten 为规则名称，className 与attributename 用于建立ObjectCreateRule类型的规则实体类 该类继承自 Rule
         //这表明所有的className都将由StandardServer来解析
+        //解析时遇到Server标签后StandardServer将被实例化后 放入Digester的 stack属性，Server执行完毕后 才会移除
+        //他的执行时机是第一个执行
+        //此时堆栈（stack属性）最顶层是 Catalina 第二层就是StandardServer
         digester.addObjectCreate("Server",
                 "org.apache.catalina.core.StandardServer",
                 "className");
         //给digester添加一个参数sever 表面 当前digester 已经支持 Server类型的 规则解析器
+        //他的执行时机是当地一个规则执行完毕后 产生实例后 ，才开始执行
         digester.addSetProperties("Server");
         //patten 为规则名称，className 与attributename 用于建立SetNext类型的规则实体类 Rule
+        //他的执行时机与前两个不同 它是重写了end方法也就是在元素结束时才会执行
         digester.addSetNext("Server",
                 "setServer",
                 "org.apache.catalina.Server");

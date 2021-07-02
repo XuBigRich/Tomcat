@@ -41,8 +41,10 @@ public final class IntrospectionUtils {
      * @param name The property name
      * @param value The property value
      * @return <code>true</code> if operation was successful
+     * 给第一层实例出来的对象属性赋值   将读取出配置文件的属性值 设置给这个实例对象
      */
     public static boolean setProperty(Object o, String name, String value) {
+        //这个方法就是给对象的属性赋值的 调用对象的set属性
         return setProperty(o,name,value,true);
     }
 
@@ -52,10 +54,12 @@ public final class IntrospectionUtils {
         if (log.isDebugEnabled())
             log.debug("IntrospectionUtils: setProperty(" +
                     o.getClass() + " " + name + "=" + value + ")");
-
+        //拼写set属性 将属性大写， 例如shutdown属性 执行完capitalize 后  就变成了setShutdown
+        //所以 setter 就是给属性设置值
         String setter = "set" + capitalize(name);
 
         try {
+            //获取所有方法
             Method methods[] = findMethods(o.getClass());
             Method setPropertyMethodVoid = null;
             Method setPropertyMethodBool = null;
@@ -63,10 +67,12 @@ public final class IntrospectionUtils {
             // First, the ideal case - a setFoo( String ) method
             for (int i = 0; i < methods.length; i++) {
                 Class<?> paramT[] = methods[i].getParameterTypes();
+                //找到方法名为setter 的方法
                 if (setter.equals(methods[i].getName()) && paramT.length == 1
                         && "java.lang.String".equals(paramT[0].getName())) {
-
+                    //给他附上值
                     methods[i].invoke(o, new Object[] { value });
+//                    返回true
                     return true;
                 }
             }
@@ -245,6 +251,7 @@ public final class IntrospectionUtils {
     }
 
     /**
+     * 将${NAME} 中的NAME提取出来
      * Replace ${NAME} with the property value.
      * @param value The value
      * @param staticProp Replacement properties
@@ -314,11 +321,13 @@ public final class IntrospectionUtils {
      * Reverse of Introspector.decapitalize.
      * @param name The name
      * @return the capitalized string
+     * 将首字母大写后返回
      */
     public static String capitalize(String name) {
         if (name == null || name.length() == 0) {
             return name;
         }
+        //这个首字母大写有点骚
         char chars[] = name.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]);
         return new String(chars);
@@ -369,6 +378,16 @@ public final class IntrospectionUtils {
         return null;
     }
 
+    /**
+     * 给某个对象赋值
+     * @param target 执行方法的对西那个
+     * @param methodN 使用target对象的方法方法名为methodN  做初始化并运行
+     * @param param1 方法参数 之一  如果下边哪个String传入的不是null 就使用 下面的类的实例类型当作参数运行方法 如果没写 就使用 这个类的类型当作参数去运行方法
+     * @param typeParam1 方法参数 之一  如果本String传入的不是null 就使用 本类的实例类型当作参数运行方法 如果没写 就使用 上边
+     * @param cl 所使用的加载器
+     * @return
+     * @throws Exception
+     */
     public static Object callMethod1(Object target, String methodN,
             Object param1, String typeParam1, ClassLoader cl) throws Exception {
         if (target == null || param1 == null) {

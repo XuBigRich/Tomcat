@@ -45,6 +45,7 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @author Amy Roh
+ * 这个类被装载 会有一系列的初始化属性
  */
 public class MBeanUtils {
 
@@ -540,8 +541,9 @@ public class MBeanUtils {
     public static synchronized Registry createRegistry() {
         if (registry == null) {
             registry = Registry.getRegistry(null, null);
+            //获取类装载器
             ClassLoader cl = MBeanUtils.class.getClassLoader();
-
+            //
             registry.loadDescriptors("org.apache.catalina.mbeans",  cl);
             registry.loadDescriptors("org.apache.catalina.authenticator", cl);
             registry.loadDescriptors("org.apache.catalina.core", cl);

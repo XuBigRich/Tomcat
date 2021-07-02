@@ -46,6 +46,8 @@ import org.apache.tomcat.util.modeler.Registry;
  *
  * @author Craig R. McClanahan
  * @since 4.1
+ *
+ * 这个类会装载配置文件  注意观察他的初始化属性  与构造方法
  */
 public class GlobalResourcesLifecycleListener implements LifecycleListener {
 

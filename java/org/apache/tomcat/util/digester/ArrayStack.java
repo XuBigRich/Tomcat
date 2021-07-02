@@ -42,6 +42,8 @@ import java.util.EmptyStackException;
  *
  * @see java.util.Stack
  * @since Digester 1.6 (from Commons Collections 1.0)
+ *
+ * 这个类是Tomcat自己创建的一个栈的数据类型 他继承自ArrayList
  */
 public class ArrayStack<E> extends ArrayList<E> {
 
@@ -84,6 +86,9 @@ public class ArrayStack<E> extends ArrayList<E> {
      *
      * @return the top item on the stack
      * @throws EmptyStackException  if the stack is empty
+     * 查询peek次数
+     *  1.peek第一次调用取出来了"" bodyText属性的默认值
+     *
      */
     public E peek() throws EmptyStackException {
         int n = size();
@@ -133,6 +138,11 @@ public class ArrayStack<E> extends ArrayList<E> {
      *
      * @param item  the item to be added
      * @return the item just pushed
+     * 解析配置文件过程中入栈顺序
+     * Digester matches属性 栈
+     *  1.最先加入的是Catalina实例对象
+     *  2.在digester中bodyText属性的默认值
+     *  接着被调用了一下peek方法
      */
     public E push(E item) {
         add(item);

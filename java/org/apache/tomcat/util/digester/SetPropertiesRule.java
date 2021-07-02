@@ -26,6 +26,8 @@ import org.xml.sax.Attributes;
 /**
  * <p>Rule implementation that sets properties on the object at the top of the
  * stack, based on attributes with corresponding names.</p>
+ *
+ * 此类是取出元素属性的一个规则类
  */
 
 public class SetPropertiesRule extends Rule {
@@ -45,6 +47,7 @@ public class SetPropertiesRule extends Rule {
             throws Exception {
 
         // Populate the corresponding properties of the top object
+        //通常情况下SetPropertiesRule这个Rule会放入标签解析规则的第二个，Object 会取出Rule第一个生成的对象
         Object top = digester.peek();
         if (digester.log.isDebugEnabled()) {
             if (top != null) {
@@ -56,12 +59,15 @@ public class SetPropertiesRule extends Rule {
                                    "} Set NULL properties");
             }
         }
-
+        //遍历标签上的属性
         for (int i = 0; i < attributes.getLength(); i++) {
+            //取出标签上的属性 如port
             String name = attributes.getLocalName(i);
+            //查看这个属性确定不是空的
             if ("".equals(name)) {
                 name = attributes.getQName(i);
             }
+            //取出这个属性的值 如8005
             String value = attributes.getValue(i);
 
             if (digester.log.isDebugEnabled()) {
@@ -69,6 +75,9 @@ public class SetPropertiesRule extends Rule {
                         "} Setting property '" + name + "' to '" +
                         value + "'");
             }
+            //!digester.isFakeAttribute(top, name) 判断这个属性是否是实例对象中不存在的属性，如果不存在就不需要继续往后执行了
+            //IntrospectionUtils.setProperty(top, name, value)给top对象赋值 属性为name 值为value   并判断 给对象赋值是否成功
+            //digester.getRulesValidation()
             if (!digester.isFakeAttribute(top, name)
                     && !IntrospectionUtils.setProperty(top, name, value)
                     && digester.getRulesValidation()) {

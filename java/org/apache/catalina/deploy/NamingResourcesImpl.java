@@ -64,6 +64,7 @@ import org.apache.tomcat.util.res.StringManager;
  * Naming Context and their associated JNDI context.
  *
  * @author Remy Maucherat
+ * GlobalNamingResources 标签的实例类
  */
 public class NamingResourcesImpl extends LifecycleMBeanBase
         implements Serializable, NamingResources {

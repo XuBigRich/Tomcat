@@ -59,7 +59,7 @@ public final class Bootstrap {
 
     private static final File catalinaBaseFile;
     private static final File catalinaHomeFile;
-
+    //提取"中间文字内容的正则表达式
     private static final Pattern PATH_PATTERN = Pattern.compile("(\".*?\")|(([^,])*)");
 
     static {
@@ -167,7 +167,7 @@ public final class Bootstrap {
         }
     }
 
-
+    //创建类加载器
     private ClassLoader createClassLoader(String name, ClassLoader parent)
             throws Exception {
         //每次加载类的时候要先确定一下 这个类的静态代码块的初始化问题
@@ -190,6 +190,7 @@ public final class Bootstrap {
             try {
                 @SuppressWarnings("unused")
                 URL url = new URL(repository);
+                //Repository用于描述 资源的路径 和 资源类型
                 repositories.add(new Repository(repository, RepositoryType.URL));
                 continue;
             } catch (MalformedURLException e) {
@@ -210,8 +211,13 @@ public final class Bootstrap {
                 //那就直接加入 list  类型 填为DIR
                 repositories.add(new Repository(repository, RepositoryType.DIR));
             }
+            //此时该方法走完 会将配置文件中的所有信息路径提取出来，依据后缀结尾不同赋予他们不同的资源类型
+            // 如以 *.jar结尾的 为RepositoryType.GLOB 类型
+            //以 .jar 结尾的 为 RepositoryType.JAR
+            //当然还有从配置文件中读取到的URL资源  也一并放入了repositories容器中 类型为RepositoryType.URL
+            //
         }
-        //将处理完的配置文件后的List 放入类加载工厂里面
+        //将处理完的配置文件后的List 放入类加载器工厂里面
         return ClassLoaderFactory.createClassLoader(repositories, parent);
     }
 
@@ -233,7 +239,7 @@ public final class Bootstrap {
         if (pos_start >= 0) {
             //声明一个StringBuilder 对象
             StringBuilder builder = new StringBuilder();
-            //设置post_end 默认值为-1
+            //设置post_end 默认值为-1  它始终代表下一个}的位置
             int pos_end = -1;
             //只要pos_start还大于零就进行循环
             while (pos_start >= 0) {
@@ -256,7 +262,7 @@ public final class Bootstrap {
                     replacement = null;
                 } else if //如果里面写的是catalina
                 (Globals.CATALINA_HOME_PROP.equals(propName)) {
-                    //那么就
+                    //那么就设置在初始化阶段 （静态方法中） 配置的资源路径
                     replacement = getCatalinaHome();
                 } else if (Globals.CATALINA_BASE_PROP.equals(propName)) {
                     replacement = getCatalinaBase();
@@ -268,6 +274,7 @@ public final class Bootstrap {
                 } else {
                     builder.append(str, pos_start, pos_end + 1);
                 }
+                //从pos_end的位置继续向后查找${  赋值给pos_start
                 pos_start = str.indexOf("${", pos_end + 1);
             }
             builder.append(str, pos_end + 1, str.length());

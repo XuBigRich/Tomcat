@@ -26,6 +26,7 @@ import org.xml.sax.Attributes;
  * Rule implementation that creates a new object and pushes it
  * onto the object stack.  When the element is complete, the
  * object will be popped
+ * 这个类只处理Listener 标签
  */
 
 public class ObjectCreateRule extends Rule {
@@ -118,7 +119,7 @@ public class ObjectCreateRule extends Rule {
         //碰到可以解析的会走到这一步然后实例化配置文件中的类
         Class<?> clazz = digester.getClassLoader().loadClass(realClassName);
         Object instance = clazz.getConstructor().newInstance();
-        //将实例好的对象都给他放到digester中
+        //将实例好的对象都给他放到digester中的stack属性中
         digester.push(instance);
     }
 

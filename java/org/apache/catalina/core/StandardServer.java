@@ -58,6 +58,8 @@ import org.apache.tomcat.util.res.StringManager;
  * (but not required) when deploying and starting Catalina.
  *
  * @author Craig R. McClanahan
+ *
+ * Server的默认类
  */
 public final class StandardServer extends LifecycleMBeanBase implements Server {
 

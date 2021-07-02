@@ -211,6 +211,8 @@ public class Digester extends DefaultHandler2 {
      * "nesting" level of the input xml.
      *
      * @since 1.6
+     *
+     * matches也是一个栈的数据结构
      */
     protected ArrayStack<List<Rule>> matches = new ArrayStack<>(10);
 
@@ -329,6 +331,7 @@ public class Digester extends DefaultHandler2 {
 
     /**
      * The object stack being constructed.
+     * 这个地方存放读取配置文件后生成的对象实例 放入Tomcat自己声明的栈中
      */
     protected ArrayStack<Object> stack = new ArrayStack<>();
 
@@ -354,6 +357,9 @@ public class Digester extends DefaultHandler2 {
 
     /**
      * Fake attributes map (attributes are often used for object creation).
+     *
+     * fake 假的 attribute 属性
+     * 也就是说假属性都是在Digester有备案的
      */
     protected Map<Class<?>, List<String>> fakeAttributes = null;
 
@@ -925,7 +931,7 @@ public class Digester extends DefaultHandler2 {
         }
 
         bodyText.append(buffer, start, length);
-
+        System.out.println(bodyText);
     }
 
 
@@ -979,6 +985,7 @@ public class Digester extends DefaultHandler2 {
      * @param qName - The qualified XML 1.0 name (with prefix), or the
      *   empty string if qualified names are not available.
      * @exception SAXException if a parsing error is to be reported
+     * 元素结束调用这个方法 以Listener举例 bodyText 为第一次返回 值为null
      */
     @Override
     public void endElement(String namespaceURI, String localName, String qName)
@@ -1005,6 +1012,7 @@ public class Digester extends DefaultHandler2 {
         }
 
         // Fire "body" events for all relevant rules
+        //因为是结束标签 所以需要将当前装载的元素配置文件产生的对象从栈中移除
         List<Rule> rules = matches.pop();
         if ((rules != null) && (rules.size() > 0)) {
             String bodyText = this.bodyText.toString().intern();
@@ -1038,6 +1046,7 @@ public class Digester extends DefaultHandler2 {
         // Fire "end" events for all relevant rules in reverse order
         if (rules != null) {
             for (int i = 0; i < rules.size(); i++) {
+                //外国人奇葩的脑回路！？
                 int j = (rules.size() - i) - 1;
                 try {
                     Rule rule = rules.get(j);
@@ -1233,7 +1242,7 @@ public class Digester extends DefaultHandler2 {
      * @param list The attributes attached to the element. If there are
      *   no attributes, it shall be an empty Attributes object.
      * @exception SAXException if a parsing error is to be reported
-     * ElementNode开始对文档的与阿苏进行处理
+     * ElementNode开始对文档的与元素进行处理  这是对xml解析的一个主要方法之一
      */
     @Override
     public void startElement(String namespaceURI, String localName, String qName, Attributes list)
@@ -1286,12 +1295,13 @@ public class Digester extends DefaultHandler2 {
         }
 
         // Fire "begin" events for all relevant rules
-        //根据规则开始匹配解析xml  通常情况下namespaceURI 是为""的
+        //根据规则开始匹配解析xml  通常情况下namespaceURI 是为""的  通过match匹配到所有可以解析的Rule（规则）
         List<Rule> rules = getRules().match(namespaceURI, match);
+        //将匹配到的规则放入matches栈中  当新遇到一个标签时 就将规则push进去 当这个标签 结束时 就将rules移除（出栈）
         matches.push(rules);
         //判断是否存在相应元素的解析规则
         if ((rules != null) && (rules.size() > 0)) {
-            //如果存在遍历每一个元素解析规则
+            //遍历当前元素 所有的规则  按顺序，第一个初始化 需要实例化的对象， 第二个 给实例化对象赋值，第三个
             for (int i = 0; i < rules.size(); i++) {
                 try {
                     //取出来
@@ -1299,7 +1309,8 @@ public class Digester extends DefaultHandler2 {
                     if (debug) {
                         log.debug("  Fire begin() for " + rule);
                     }
-                    //开始解析  将配置文件中的类实例化 好后放入 stack 中
+                    //开始解析 rule的begin方法是正儿八经解析xml的方法
+                    // 将配置文件中的类实例化 好后放入 stack 中
                     rule.begin(namespaceURI, name, list);
                 } catch (Exception e) {
                     log.error("Begin event threw exception", e);
@@ -1582,6 +1593,7 @@ public class Digester extends DefaultHandler2 {
     public Object parse(InputStream input) throws IOException, SAXException {
         configure();
         InputSource is = new InputSource(input);
+        //执行这个方法parse（） 就会开始执行预先设定好的xml解析类，（此处预先设定好的xml解析类是当前Digester类）
         getXMLReader().parse(is);
         return root;
     }
@@ -1782,9 +1794,10 @@ public class Digester extends DefaultHandler2 {
      *
      * @param pattern Element matching pattern
      * @see SetPropertiesRule
+     * pattern是标签名也是解析规则的名
      */
     public void addSetProperties(String pattern) {
-
+        //SetPropertiesRule 对象 用以 给 相应属性赋值
         addRule(pattern, new SetPropertiesRule());
 
     }
@@ -1826,6 +1839,7 @@ public class Digester extends DefaultHandler2 {
      * Return the top object on the stack without removing it.  If there are
      * no objects on the stack, return <code>null</code>.
      * @return the top object
+     * stack这个栈中存放着所有取配置文件后生成的对象实例
      */
     public Object peek() {
         try {
@@ -1875,6 +1889,7 @@ public class Digester extends DefaultHandler2 {
      * Push a new object onto the top of the object stack.
      *
      * @param object The new object
+     * 第一个push进来的是catalina
      */
     public void push(Object object) {
 
@@ -2099,6 +2114,7 @@ public class Digester extends DefaultHandler2 {
         String in = bodyText.toString();
         String out;
         try {
+            //
             out = IntrospectionUtils.replaceProperties(in, null, source, getClassLoader());
         } catch (Exception e) {
             return bodyText; // return unchanged data

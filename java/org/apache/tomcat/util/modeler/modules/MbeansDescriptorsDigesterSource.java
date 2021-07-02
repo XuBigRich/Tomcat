@@ -31,16 +31,25 @@ import org.apache.tomcat.util.digester.Digester;
 import org.apache.tomcat.util.modeler.ManagedBean;
 import org.apache.tomcat.util.modeler.Registry;
 
+/**
+ * 这个类将在加载Server.xml配置文件
+ * 的Listener 元素
+ * 的className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener"属性时
+ * 对GlobalResourcesLifecycleListener进行初始化
+ * 其中一个变量的构造参数需要 实例该类
+ * 该类并没有 构造方法
+ */
 public class MbeansDescriptorsDigesterSource extends ModelerSource
 {
     private static final Log log =
             LogFactory.getLog(MbeansDescriptorsDigesterSource.class);
+    //这就是个镜像锁
     private static final Object dLock = new Object();
 
     private Registry registry;
     private final List<ObjectName> mbeans = new ArrayList<>();
     private static Digester digester = null;
-
+    //创建解析器
     private static Digester createDigester() {
 
         Digester digester = new Digester();
@@ -140,6 +149,14 @@ public class MbeansDescriptorsDigesterSource extends ModelerSource
         this.source=source;
     }
 
+    /**
+     * 给属性设置相应的值
+     * @param registry The registry
+     * @param type The bean registry type
+     * @param source Introspected object or some other source
+     * @return
+     * @throws Exception
+     */
     @Override
     public List<ObjectName> loadDescriptors( Registry registry, String type,
             Object source) throws Exception {

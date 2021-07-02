@@ -47,6 +47,8 @@ import org.apache.tomcat.util.buf.StringUtils.Function;
  * descriptor.</p>
  *
  * @author Craig R. McClanahan
+ * 来自于org.apache.catalina.mbeans 包下的mbeans-descriptors.xml 的配置文件 解析规则中
+ * mbeans-descriptors/mbean 的元素 需要实例化的类
  */
 public class ManagedBean implements java.io.Serializable {
 

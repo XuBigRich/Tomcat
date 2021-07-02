@@ -159,6 +159,7 @@ public final class ClassLoaderFactory {
         //先确定repositories容器不为空
         if (repositories != null) {
             for (Repository repository : repositories)  {
+                //找到catalina.properties中的配置信息 （在repositories 为 URL类型的数据）
                 if (repository.getType() == RepositoryType.URL) {
                     URL url = buildClassLoaderUrl(repository.getLocation());
                     if (log.isDebugEnabled())
