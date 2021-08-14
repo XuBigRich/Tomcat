@@ -61,7 +61,7 @@ public final class Bootstrap {
     private static final File catalinaHomeFile;
     //提取"中间文字内容的正则表达式
     private static final Pattern PATH_PATTERN = Pattern.compile("(\".*?\")|(([^,])*)");
-
+    //整个静态方法块就干了一件事 就是将catalina.properties装载到系统变量中去
     static {
         // 获取tomcat 当前文件夹
         String userDir = System.getProperty("user.dir");

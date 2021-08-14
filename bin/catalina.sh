@@ -111,10 +111,12 @@
 # -----------------------------------------------------------------------------
 
 # OS specific support.  $var _must_ be set to either true or false.
+#各种操作系统标识
 cygwin=false
 darwin=false
 os400=false
 hpux=false
+#case when 语句 通过uname 确定当前操作系统
 case "`uname`" in
 CYGWIN*) cygwin=true;;
 Darwin*) darwin=true;;
@@ -123,8 +125,9 @@ HP-UX*) hpux=true;;
 esac
 
 # resolve links - $0 may be a softlink
+#获取当前文件名称
 PRG="$0"
-
+#得到当前文件真实路径
 while [ -h "$PRG" ]; do
   ls=`ls -ld "$PRG"`
   link=`expr "$ls" : '.*-> \(.*\)$'`
@@ -136,18 +139,20 @@ while [ -h "$PRG" ]; do
 done
 
 # Get standard environment variables
+#得到真实路径的引用
 PRGDIR=`dirname "$PRG"`
 
 # Only set CATALINA_HOME if not already set
+#返回项目根目录 ，因为catalina.sh 依照标准是在 tomcat 根目录的bin 目录下的
 [ -z "$CATALINA_HOME" ] && CATALINA_HOME=`cd "$PRGDIR/.." >/dev/null; pwd`
-
+#
 # Copy CATALINA_BASE from CATALINA_HOME if not already set
 [ -z "$CATALINA_BASE" ] && CATALINA_BASE="$CATALINA_HOME"
 
 # Ensure that any user defined CLASSPATH variables are not used on startup,
 # but allow them to be specified in setenv.sh, in rare case when it is needed.
 CLASSPATH=
-
+#如果文件存在且可读
 if [ -r "$CATALINA_BASE/bin/setenv.sh" ]; then
   . "$CATALINA_BASE/bin/setenv.sh"
 elif [ -r "$CATALINA_HOME/bin/setenv.sh" ]; then
@@ -245,7 +250,7 @@ if $cygwin; then
   CLASSPATH=`cygpath --path --windows "$CLASSPATH"`
   [ -n "$JAVA_ENDORSED_DIRS" ] && JAVA_ENDORSED_DIRS=`cygpath --path --windows "$JAVA_ENDORSED_DIRS"`
 fi
-
+# 开始拼接 各种Java 启动参数
 if [ -z "$JSSE_OPTS" ] ; then
   JSSE_OPTS="-Djdk.tls.ephemeralDHKeySize=2048"
 fi
