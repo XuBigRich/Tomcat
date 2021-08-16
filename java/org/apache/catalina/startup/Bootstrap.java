@@ -61,8 +61,9 @@ public final class Bootstrap {
     private static final File catalinaHomeFile;
     //提取"中间文字内容的正则表达式
     private static final Pattern PATH_PATTERN = Pattern.compile("(\".*?\")|(([^,])*)");
+
     //整个静态方法块就干了一件事 就是将catalina.properties装载到系统变量中去
-     static {
+    static {
         // 获取tomcat 当前文件夹
         String userDir = System.getProperty("user.dir");
         System.out.println(userDir);
@@ -151,14 +152,15 @@ public final class Bootstrap {
     private void initClassLoaders() {
         try {
             //BootStrap的配置文件 common.loade 都由 此方法初始化  由路径生成的URL数组 交由URLClassLoader 生成ClassLoader对象
+            //自此 catalina.properties 配置文件中 ，所有的 common.loader，的类都由这个类加载器进行加载。
             commonLoader = createClassLoader("common", null);
             if (commonLoader == null) {
                 // no config file, default to this loader - we might be in a 'single' env.
                 commonLoader = this.getClass().getClassLoader();
             }
-            //读取配置文件的server.load 由 commonLoader 加载
+            //读取配置文件的server.load 如果配置文件server.load  啥也没配置 ，那么catalinaLoader的类加载器直接为 commonLoader 加载，
             catalinaLoader = createClassLoader("server", commonLoader);
-            //读取配置文件的shareds.load 由 commonLoader 加载
+            //读取配置文件的shareds.load 如果配置文件shareds.load  啥也没配置 ，那么sharedLoader的类加载器直接为 commonLoader 加载，   由 commonLoader 加载
             sharedLoader = createClassLoader("shared", commonLoader);
         } catch (Throwable t) {
             handleThrowable(t);
@@ -293,6 +295,7 @@ public final class Bootstrap {
         // 这个初始化虽然配置了 但因为 lib 下没有相关jar包 相当于啥也没做
         initClassLoaders();
         //2020 年 3月 31 日
+        //将catalinaLoader设置为上下文加载器
         Thread.currentThread().setContextClassLoader(catalinaLoader);
         SecurityClassLoad.securityClassLoad(catalinaLoader);
 
@@ -307,10 +310,12 @@ public final class Bootstrap {
         // Set the shared extensions class loader
         if (log.isDebugEnabled())
             log.debug("Setting startup class properties");
-        //直接写死一个方法名
+        //直接写死一个方法名，反射基操
         String methodName = "setParentClassLoader";
         Class<?> paramTypes[] = new Class[1];
+        //声明的参数类型
         paramTypes[0] = Class.forName("java.lang.ClassLoader");
+        //初始化时的参数对象
         Object paramValues[] = new Object[1];
         paramValues[0] = sharedLoader;
         //获取含有一个参数 参数类型为ClassLoader的 名为setParentClassLoader 的Catalina 类实例的方法
@@ -325,6 +330,7 @@ public final class Bootstrap {
 
     /**
      * Load daemon.  加载当启动jar包时传入进来的 参数
+     * 最终这个方法会调用Catalina的 load方法 ，传入 arguments 参数
      */
     private void load(String[] arguments) throws Exception {
 
@@ -352,7 +358,7 @@ public final class Bootstrap {
         if (log.isDebugEnabled()) {
             log.debug("Calling startup class " + method);
         }
-        //使用这个方法开始调用  参数
+        //使Catalina 类的load这个方法开始调用  传入用户启动时的参数
         method.invoke(catalinaDaemon, param);
     }
 
@@ -502,6 +508,7 @@ public final class Bootstrap {
                 //如果tomcat没有启动过 那么
                 Bootstrap bootstrap = new Bootstrap();
                 try {
+                    //bootstrap 初始化，生成一些类加载器，并初始化catalina类 ，赋值给catalinaDaemon
                     bootstrap.init();
                 } catch (Throwable t) {
                     handleThrowable(t);
@@ -520,14 +527,14 @@ public final class Bootstrap {
         }
 
         try {
-            //创建一个命令 名为start
+            //创建一个局部属性，默认command 为start
             String command = "start";
-            //检查启用Bootstrap启动时 是否有传入参数
+            //检查启用Bootstrap启动时 是否有传入参数，如果传入那么将给command进行改值
             if (args.length > 0) {
-                //如果传入了参数 那么 参数长度-1
+                //如果传入了参数 那么 取出 传入参数的 最后一个 参数
                 command = args[args.length - 1];
             }
-            //如果没有传入参数，那么
+            //判断 mommand 是一个什么样的 参数 时startd 还是stopd 还是start 等 对Bootstrap 进行一系列操作
             if (command.equals("startd")) {
                 args[args.length - 1] = "start";
                 daemon.load(args);

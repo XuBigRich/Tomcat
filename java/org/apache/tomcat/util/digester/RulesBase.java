@@ -39,6 +39,7 @@ import java.util.List;
  *     <code>&lt;b&gt;</code> element, nested inside an <code>&lt;a&gt;</code>
  *      element, no matter how deeply the pair is nested.</li>
  * </ul>
+ * 这个类是保存 解析规则集合的，主要属性就是cache
  */
 
 public class RulesBase implements Rules {
@@ -148,13 +149,15 @@ public class RulesBase implements Rules {
     @Override
     public void add(String pattern, Rule rule) {
         // to help users who accidentally add '/' to the end of their patterns
+        //获取规则名称长度
         int patternLength = pattern.length();
         //给规则名称 如果符合条件加以处理
         if (patternLength>1 && pattern.endsWith("/")) {
+            //提取出规则名称有效部分 不含/（斜线）
             pattern = pattern.substring(0, patternLength-1);
         }
 
-        //从缓存中取出 所有以pattern 为名的规则list
+        //从缓存中取出 规则名称为pattern 的规则list
         List<Rule> list = cache.get(pattern);
         //如果list为null
         if (list == null) {

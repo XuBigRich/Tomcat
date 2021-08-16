@@ -298,19 +298,19 @@ public class Catalina {
         digester.setUseContextClassLoader(true);
 
         // Configure the actions we will be using
-        //patten 为规则名称，className 与attributename 用于建立ObjectCreateRule类型的规则实体类 该类继承自 Rule
+        //patten 为规则名称，className 与attributeName 用于建立ObjectCreateRule类型的规则实体类 该类继承自 Rule
         //这表明所有的className都将由StandardServer来解析
         //解析时遇到Server标签后StandardServer将被实例化后 放入Digester的 stack属性，Server执行完毕后 才会移除
         //他的执行时机是第一个执行
-        //此时堆栈（stack属性）最顶层是 Catalina 第二层就是StandardServer
+        //此时堆栈（stack属性）最顶层是 Catalina 第二层就是StandardServer        ObjectCreateRule extends Rule
         digester.addObjectCreate("Server",
                 "org.apache.catalina.core.StandardServer",
                 "className");
         //给digester添加一个参数sever 表面 当前digester 已经支持 Server类型的 规则解析器
-        //他的执行时机是当地一个规则执行完毕后 产生实例后 ，才开始执行
+        //他的执行时机是当地一个规则执行完毕后 产生实例后 ，才开始执行                SetPropertiesRule extends Rule
         digester.addSetProperties("Server");
         //patten 为规则名称，className 与attributename 用于建立SetNext类型的规则实体类 Rule
-        //他的执行时机与前两个不同 它是重写了end方法也就是在元素结束时才会执行
+        //他的执行时机与前两个不同 它是重写了end方法也就是在元素结束时才会执行         SetNextRule extends Rule
         digester.addSetNext("Server",
                 "setServer",
                 "org.apache.catalina.Server");
@@ -571,7 +571,7 @@ public class Catalina {
         initNaming();
 
         // Create and execute our Digester
-        //初始化xml解析器，配备各种解析规则
+        //初始化xml解析器，配备各种解析规则  （这个地方是重点，他囊括了，当碰到指定dom时，开始应该怎么做，过程中应该怎么做，结束应该怎么做）
         Digester digester = createStartDigester();
         //令人迷惑的InputSource
         InputSource inputSource = null;
@@ -646,7 +646,7 @@ public class Catalina {
                 inputSource.setByteStream(inputStream);
                 //将当前实例放入文件解析器
                 digester.push(this);
-  //重点 重点 重点              使用预先设置好的文件解析器 开始解析 配置文件 装载server 服务等 生成了xml解析器
+                //重点 重点 重点              使用预先设置好的文件解析器 开始解析 配置文件 装载server 服务等 生成了xml解析器
                 digester.parse(inputSource);
             } catch (SAXParseException spe) {
                 log.warn("Catalina.start using " + getConfigFile() + ": " +
@@ -695,8 +695,11 @@ public class Catalina {
     }
 
 
-    /*
+    /**
      * Load using arguments
+     * 此方法是由Bootstrap 类 入口进入的，当进入这个方法时，代表着Bootstrap类的工作已经告一段落了
+     *
+     * @param args 用户启动程序时传入的参数
      */
     public void load(String args[]) {
 
@@ -716,6 +719,7 @@ public class Catalina {
     public void start() {
         //判断server属性是否为null，第一次启动时 server为null
         if (getServer() == null) {
+            //加载解析器，并解析server.xml配置文件
             load();
         }
 

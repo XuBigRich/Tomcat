@@ -139,12 +139,17 @@ public final class ClassLoaderFactory {
      * Create and return a new class loader, based on the configuration
      * defaults and the specified directory paths:
      *
+     * 传入一个资源 列表，可以是一个URL，也可以是一个文件夹，也可以是一个Jar包，或者是一个全局的地址
+     * 生成一个类加载器，这个类加载器可以用于装载 上面资源列表中的类。
+     *
      * @param repositories List of class directories, jar files, jar directories
      *                     or URLS that should be added to the repositories of
      *                     the class loader.
+     *                     资源列表
      * @param parent Parent class loader for the new class loader, or
      *  <code>null</code> for the system class loader.
-     * @return the new class loader
+     *               所声明类加载器的父加载器（双亲委派机制）
+     * @return the new class loader  返回的新的类加载器
      *
      * @exception Exception if an error occurs constructing the class loader
      */
@@ -251,7 +256,7 @@ public final class ClassLoaderFactory {
                 log.debug("  location " + i + " is " + array[i]);
             }
         // 匿名函数  使用URLClassLoader加载器 将预先准备好的类加载入jvm并返回类加载器实例对象
-        //这个地方就是生成一个类加载器，将类加载器要加载的类是array里面的类
+        //这个地方就是生成一个类加载器,这个类加载器可以加载 array地址里面的所有类，也就是说此后array 所有的类，可以通过生成的这个类加载器去进行装载，
         return AccessController.doPrivileged(
                 new PrivilegedAction<URLClassLoader>() {
                     @Override
