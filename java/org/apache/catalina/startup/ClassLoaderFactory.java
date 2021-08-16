@@ -173,7 +173,7 @@ public final class ClassLoaderFactory {
                     File directory = new File(repository.getLocation());
                     //返回此抽象路径名的规范形式。等同于 new File(this.getCanonicalPath()())。
                     directory = directory.getCanonicalFile();
-                    //如果返回true 就跳出此次循环（当前环境 但前配置 直接跳出了for循环）
+                    //判断当前路径 当前用户是否有访问权限  如果返回false 就跳出此次循环 （当前环境 但前配置 直接跳出了for循环）
                     if (!validateFile(directory, RepositoryType.DIR)) {
                         continue;
                     }
@@ -251,6 +251,7 @@ public final class ClassLoaderFactory {
                 log.debug("  location " + i + " is " + array[i]);
             }
         // 匿名函数  使用URLClassLoader加载器 将预先准备好的类加载入jvm并返回类加载器实例对象
+        //这个地方就是生成一个类加载器，将类加载器要加载的类是array里面的类
         return AccessController.doPrivileged(
                 new PrivilegedAction<URLClassLoader>() {
                     @Override
