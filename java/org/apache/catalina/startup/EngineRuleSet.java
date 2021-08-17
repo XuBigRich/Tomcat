@@ -113,7 +113,7 @@ public class EngineRuleSet extends RuleSetBase {
                             "addLifecycleListener",
                             "org.apache.catalina.LifecycleListener");
 
-
+        //解析EngineRuleSet 需要着重注意，因为他会继续给Server/Service 放入Engine的解析方案,有些不一样是因为 Realm 标签里面可以继续嵌套一个Realm标签
         digester.addRuleSet(new RealmRuleSet(prefix + "Engine/"));
 
         digester.addObjectCreate(prefix + "Engine/Valve",

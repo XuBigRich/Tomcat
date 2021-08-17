@@ -935,7 +935,6 @@ public class Digester extends DefaultHandler2 {
         }
 
         bodyText.append(buffer, start, length);
-        System.out.println(bodyText);
     }
 
 
@@ -1233,7 +1232,8 @@ public class Digester extends DefaultHandler2 {
 
     /**
      * Process notification of the start of an XML element being reached.
-     *  开始对文档的与元素进行处理  这是对xml解析的一个主要方法之一
+     * 开始对文档的与元素进行处理  这是对xml解析的一个主要方法之一
+     *
      * @param namespaceURI The Namespace URI, or the empty string if the element
      *                     has no Namespace URI or if Namespace processing is not being performed.
      * @param localName    The local name (without prefix), or the empty
@@ -1656,6 +1656,7 @@ public class Digester extends DefaultHandler2 {
      * Register a set of Rule instances defined in a RuleSet.
      *
      * @param ruleSet The RuleSet instance to configure from
+     *                RuleSet中有众多解析实现 对应索引的规则，
      */
     public void addRuleSet(RuleSet ruleSet) {
         //不出意外为null
@@ -1670,7 +1671,9 @@ public class Digester extends DefaultHandler2 {
             }
         }
         setRuleNamespaceURI(newNamespaceURI);
-        //给ruleSet 有可能为（org.apache.catalina.ha.ClusterRuleSet） 设置添加一个RuleInstances 为当前对象
+        //给ruleSet 的接口实现 执行 addRuleInstances方法，传入当前对象
+        //通常情况下addRuleInstances 方法 会 回调this
+        // this(Digester) 进入后 会回调，addRule方法。给当前对象添加众多解析方案
         ruleSet.addRuleInstances(this);
         setRuleNamespaceURI(oldNamespaceURI);
     }

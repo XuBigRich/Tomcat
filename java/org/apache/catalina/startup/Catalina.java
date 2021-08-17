@@ -174,6 +174,7 @@ public class Catalina {
         }
         return ClassLoader.getSystemClassLoader();
     }
+
     //当配置文件执行完毕时，会将生成的Server 通过这个方法 赋值给Catalina
     public void setServer(Server server) {
         this.server = server;
@@ -359,16 +360,19 @@ public class Catalina {
                 "addExecutor",
                 "org.apache.catalina.Executor");
 
-        //原理同上
+        //创建一个Connector 对象
         digester.addRule("Server/Service/Connector",
                 new ConnectorCreateRule());
+        //声明这个解析器会解析配置文件中的executor 与sslImplementationName属性
         digester.addRule("Server/Service/Connector",
                 new SetAllPropertiesRule(new String[]{"executor", "sslImplementationName"}));
+        //给Service类添加Connector 属性
         digester.addSetNext("Server/Service/Connector",
                 "addConnector",
                 "org.apache.catalina.connector.Connector");
         //原理同上
         digester.addObjectCreate("Server/Service/Connector/SSLHostConfig",
+                //如果server.xml配置了 SSLHostConfig标签，那么会生成一个SSLHostConfig类
                 "org.apache.tomcat.util.net.SSLHostConfig");
         digester.addSetProperties("Server/Service/Connector/SSLHostConfig");
         digester.addSetNext("Server/Service/Connector/SSLHostConfig",
@@ -414,8 +418,11 @@ public class Catalina {
                 "org.apache.coyote.UpgradeProtocol");
 
         // Add RuleSets for nested elements
-        //添加各规则集
+        //添加各规则集，这个地方的xml解析与上方有了些许不同，这里时将声明好的解析规则放入，然后提供一个回调方法addRuleInstances，
+        //之所以这样设计是因为在他们的下层还有许多标签需要解析，他们的子标签解析方案需要放到对应的Rule容器中
+        //如解析GlobalNamingResources标签下的资源 ，都提前放入到了NamingRuleSet里面，他提供一个addRuleInstances方法，等待RuleSet的回调
         digester.addRuleSet(new NamingRuleSet("Server/GlobalNamingResources/"));
+        //EngineRuleSet 类里面的xml解析规则很是壮观
         digester.addRuleSet(new EngineRuleSet("Server/Service/"));
         digester.addRuleSet(new HostRuleSet("Server/Service/Engine/"));
         digester.addRuleSet(new ContextRuleSet("Server/Service/Engine/Host/"));
@@ -556,7 +563,7 @@ public class Catalina {
 
     /**
      * Start a new server instance.   创建一个server 实例
-     *
+     * <p>
      * 这个地方最最最重要的，他的存在的意义是 通过读取配置文件server.xml，然后将同配置文件中的所有类  和属性映射到Server类中，当成一个属性
      * org.apache.catalina.core.StandardServer
      */
