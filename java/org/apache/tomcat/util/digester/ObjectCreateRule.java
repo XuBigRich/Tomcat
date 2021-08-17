@@ -51,9 +51,9 @@ public class ObjectCreateRule extends Rule {
      * Construct an object create rule with the specified class name and an
      * optional attribute name containing an override.
      *
-     * @param className Java class name of the object to be created
+     * @param className     Java class name of the object to be created
      * @param attributeName Attribute name which, if present, contains an
-     *  override of the class name to create
+     *                      override of the class name to create
      */
     public ObjectCreateRule(String className,
                             String attributeName) {
@@ -84,11 +84,11 @@ public class ObjectCreateRule extends Rule {
     /**
      * Process the beginning of this element.
      *
-     * @param namespace the namespace URI of the matching element, or an
-     *   empty string if the parser is not namespace aware or the element has
-     *   no namespace
-     * @param name the local name if the parser is namespace aware, or just
-     *   the element name otherwise
+     * @param namespace  the namespace URI of the matching element, or an
+     *                   empty string if the parser is not namespace aware or the element has
+     *                   no namespace
+     * @param name       the local name if the parser is namespace aware, or just
+     *                   the element name otherwise
      * @param attributes The attribute list for this element
      */
     @Override
@@ -96,10 +96,11 @@ public class ObjectCreateRule extends Rule {
             throws Exception {
 
         // Identify the name of the class to instantiate
-        //尝试当前实例是否可以解析这个xml 重的属性，方式就是通过className尝试获取当前元素的属性 详情请看下下行
+        //尝试当前实例是否可以解析这个xml 中的属性，先给realClassName 赋值一个默认值
+        // 然后通过className尝试获取当前元素的属性 详情请看下下行
         String realClassName = className;
         if (attributeName != null) {
-            //就是这行 取到了 就说明当前元素存在 当前对象可解析的属性 如果没取到 就说嘛不可以呗
+            //就是这行 取到了 就说明当前元素存在 当前对象可解析的属性  就说嘛不可以呗   （当解析不到对应属性时 ，就使用默认值）
             String value = attributes.getValue(attributeName);
             if (value != null) {
                 realClassName = value;
@@ -109,14 +110,14 @@ public class ObjectCreateRule extends Rule {
             digester.log.debug("[ObjectCreateRule]{" + digester.match +
                     "}New " + realClassName);
         }
-
+        //这个值必须得有，如果没有就得给他抛出异常
         if (realClassName == null) {
             throw new NullPointerException("No class name specified for " +
                     namespace + " " + name);
         }
 
         // Instantiate the new object and push it on the context stack
-        //碰到可以解析的会走到这一步然后实例化配置文件中的类
+        //最终走到这一步然后先装载这个类，后实例化这个类
         Class<?> clazz = digester.getClassLoader().loadClass(realClassName);
         Object instance = clazz.getConstructor().newInstance();
         //将实例好的对象都给他放到digester中的stack属性中
@@ -128,10 +129,10 @@ public class ObjectCreateRule extends Rule {
      * Process the end of this element.
      *
      * @param namespace the namespace URI of the matching element, or an
-     *   empty string if the parser is not namespace aware or the element has
-     *   no namespace
-     * @param name the local name if the parser is namespace aware, or just
-     *   the element name otherwise
+     *                  empty string if the parser is not namespace aware or the element has
+     *                  no namespace
+     * @param name      the local name if the parser is namespace aware, or just
+     *                  the element name otherwise
      */
     @Override
     public void end(String namespace, String name) throws Exception {

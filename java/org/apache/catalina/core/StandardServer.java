@@ -59,7 +59,7 @@ import org.apache.tomcat.util.res.StringManager;
  *
  * @author Craig R. McClanahan
  *
- * Server的默认类
+ * Server的默认类，在读取配置文件时进行初始化的
  */
 public final class StandardServer extends LifecycleMBeanBase implements Server {
 

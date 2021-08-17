@@ -127,7 +127,7 @@ public class SetNextRule extends Rule {
     public void end(String namespace, String name) throws Exception {
 
         // Identify the objects to be used
-        //取出在栈中最后一个元素
+        //取出在栈中最后一个元素 （栈顶）,他实际执行的时 stack属性的peek 取出上层配置文件生成的类对象
         Object child = digester.peek(0);
         //取出在栈中倒数第二个元素（也就是配置文件中当前元素的父元素生成的实例对象）
         Object parent = digester.peek(1);

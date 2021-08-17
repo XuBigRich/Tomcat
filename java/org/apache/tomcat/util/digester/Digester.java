@@ -1045,6 +1045,7 @@ public class Digester extends DefaultHandler2 {
         }
 
         // Recover the body text from the surrounding element
+        //因为时结束标签，所以将bodyTexts栈中的最后一个数据移，并取出 （出栈）
         bodyText = bodyTexts.pop();
 
         // Fire "end" events for all relevant rules in reverse order
@@ -1232,7 +1233,7 @@ public class Digester extends DefaultHandler2 {
 
     /**
      * Process notification of the start of an XML element being reached.
-     *
+     *  开始对文档的与元素进行处理  这是对xml解析的一个主要方法之一
      * @param namespaceURI The Namespace URI, or the empty string if the element
      *                     has no Namespace URI or if Namespace processing is not being performed.
      * @param localName    The local name (without prefix), or the empty
@@ -1242,7 +1243,7 @@ public class Digester extends DefaultHandler2 {
      * @param list         The attributes attached to the element. If there are
      *                     no attributes, it shall be an empty Attributes object.
      * @throws SAXException if a parsing error is to be reported
-     *                      ElementNode开始对文档的与元素进行处理  这是对xml解析的一个主要方法之一
+     *                      ElementNode
      */
     @Override
     public void startElement(String namespaceURI, String localName, String qName, Attributes list)
@@ -2119,7 +2120,7 @@ public class Digester extends DefaultHandler2 {
         String in = bodyText.toString();
         String out;
         try {
-            //
+            //将${NAME} 中的NAME提取出来
             out = IntrospectionUtils.replaceProperties(in, null, source, getClassLoader());
         } catch (Exception e) {
             return bodyText; // return unchanged data

@@ -174,7 +174,7 @@ public class Catalina {
         }
         return ClassLoader.getSystemClassLoader();
     }
-
+    //当配置文件执行完毕时，会将生成的Server 通过这个方法 赋值给Catalina
     public void setServer(Server server) {
         this.server = server;
     }
@@ -303,6 +303,8 @@ public class Catalina {
         //解析时遇到Server标签后StandardServer将被实例化后 放入Digester的 stack属性，Server执行完毕后 才会移除
         //他的执行时机是第一个执行
         //此时堆栈（stack属性）最顶层是 Catalina 第二层就是StandardServer        ObjectCreateRule extends Rule
+        //className是默认初始化的 类
+        //attributeName是要用来判断是否存在这个属性的
         digester.addObjectCreate("Server",
                 "org.apache.catalina.core.StandardServer",
                 "className");
@@ -311,6 +313,7 @@ public class Catalina {
         digester.addSetProperties("Server");
         //patten 为规则名称，className 与attributename 用于建立SetNext类型的规则实体类 Rule
         //他的执行时机与前两个不同 它是重写了end方法也就是在元素结束时才会执行         SetNextRule extends Rule
+        //addSetNext 方法 的索引为Server  ，在结束时执行setServer方法，注意是待Server标签结束时执行setServer方法
         digester.addSetNext("Server",
                 "setServer",
                 "org.apache.catalina.Server");
@@ -553,6 +556,9 @@ public class Catalina {
 
     /**
      * Start a new server instance.   创建一个server 实例
+     *
+     * 这个地方最最最重要的，他的存在的意义是 通过读取配置文件server.xml，然后将同配置文件中的所有类  和属性映射到Server类中，当成一个属性
+     * org.apache.catalina.core.StandardServer
      */
     public void load() {
         //判断一下load 方法是否已经被调用过了  如果被调用过直接返回
