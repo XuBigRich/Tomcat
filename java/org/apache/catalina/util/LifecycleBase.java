@@ -42,7 +42,8 @@ public abstract class LifecycleBase implements Lifecycle {
 
 
     /**
-     * The list of registered LifecycleListeners for event notifications.
+     * The list of registered LifecycleListeners for event notifications..
+     * 周期监听器
      */
     private final List<LifecycleListener> lifecycleListeners = new CopyOnWriteArrayList<>();
 
@@ -63,7 +64,7 @@ public abstract class LifecycleBase implements Lifecycle {
      * the caller to handle or will it be logged instead?
      *
      * @return {@code true} if the exception will be re-thrown, otherwise
-     *         {@code false}
+     * {@code false}
      */
     public boolean getThrowOnFailure() {
         return throwOnFailure;
@@ -114,11 +115,14 @@ public abstract class LifecycleBase implements Lifecycle {
     /**
      * Allow sub classes to fire {@link Lifecycle} events.
      *
-     * @param type  Event type
-     * @param data  Data associated with event.
+     * @param type Event type
+     * @param data Data associated with event.
      */
     protected void fireLifecycleEvent(String type, Object data) {
+        //LifecycleEvent 这个类实现了EventObject接口，这是一个典型的监听模式
+        //封装一个事件对象
         LifecycleEvent event = new LifecycleEvent(this, type, data);
+        //通知所有监听器触发 LifecycleEvent事件
         for (LifecycleListener listener : lifecycleListeners) {
             listener.lifecycleEvent(event);
         }
@@ -132,8 +136,11 @@ public abstract class LifecycleBase implements Lifecycle {
         }
 
         try {
+            //设置Lifecycle状态为初始化中状态
             setStateInternal(LifecycleState.INITIALIZING, null, false);
+            //进行初始化
             initInternal();
+            //初始化完毕后 设置Lifecycle状态为初始化完毕状态
             setStateInternal(LifecycleState.INITIALIZED, null, false);
         } catch (Throwable t) {
             handleSubClassException(t, "lifecycleBase.initFail", toString());
@@ -152,10 +159,11 @@ public abstract class LifecycleBase implements Lifecycle {
 
     /**
      * {@inheritDoc}
+     * 默认的StandardServer 继承自
      */
     @Override
     public final synchronized void start() throws LifecycleException {
-
+        //标识状态 当前Lifecycle 对象的启动标识
         if (LifecycleState.STARTING_PREP.equals(state) || LifecycleState.STARTING.equals(state) ||
                 LifecycleState.STARTED.equals(state)) {
 
@@ -204,7 +212,7 @@ public abstract class LifecycleBase implements Lifecycle {
      * Sub-classes must ensure that the state is changed to
      * {@link LifecycleState#STARTING} during the execution of this method.
      * Changing state will trigger the {@link Lifecycle#START_EVENT} event.
-     *
+     * <p>
      * If a component fails to start it may either throw a
      * {@link LifecycleException} which will cause it's parent to fail to start
      * or it can place itself in the error state in which case {@link #stop()}
@@ -382,7 +390,14 @@ public abstract class LifecycleBase implements Lifecycle {
         setStateInternal(state, data, true);
     }
 
-
+    /**
+     * 设置当前Lifecycle的状态标识，描述Lifecycle 进行到了哪一步
+     *
+     * @param state
+     * @param data
+     * @param check
+     * @throws LifecycleException
+     */
     private synchronized void setStateInternal(LifecycleState state, Object data, boolean check)
             throws LifecycleException {
 
@@ -418,8 +433,10 @@ public abstract class LifecycleBase implements Lifecycle {
         }
 
         this.state = state;
+        //获取枚举中的描述
         String lifecycleEvent = state.getLifecycleEvent();
         if (lifecycleEvent != null) {
+            //这个类继承自事件
             fireLifecycleEvent(lifecycleEvent, data);
         }
     }
