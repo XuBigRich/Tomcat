@@ -231,6 +231,7 @@ public class JreMemoryLeakPreventionListener implements LifecycleListener {
 
 
     @Override
+    //如果是初始化事件，那么 他会进行数据库驱动的加载,这个操作很意外
     public void lifecycleEvent(LifecycleEvent event) {
         // Initialise these classes when Tomcat starts
         if (Lifecycle.BEFORE_INIT_EVENT.equals(event.getType())) {

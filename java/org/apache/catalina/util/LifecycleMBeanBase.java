@@ -46,7 +46,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
     protected MBeanServer mserver = null;
 
     /**
-     * Sub-classes wishing to perform additional initialization should override
+     * Sub-classes wishing（渴望） to perform（执行） additional（额外的） initialization should override
      * this method, ensuring that super.initInternal() is the first call in the
      * overriding method.
      */
@@ -56,7 +56,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
         // preRegister().
         if (oname == null) {
             mserver = Registry.getRegistry(null, null).getMBeanServer();
-
+            //将自己注册到jmx
             oname = register(this, getObjectNameKeyProperties());
         }
     }

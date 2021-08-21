@@ -233,6 +233,7 @@ public final class Globals {
     /**
      * The master flag which controls strict servlet specification
      * compliance.
+     * 从系统变量中取值，如果没有提前设置那么就赋值一个false
      */
     public static final boolean STRICT_SERVLET_COMPLIANCE =
         Boolean.parseBoolean(System.getProperty("org.apache.catalina.STRICT_SERVLET_COMPLIANCE", "false"));

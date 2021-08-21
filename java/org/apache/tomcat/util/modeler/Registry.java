@@ -433,6 +433,7 @@ public class Registry implements RegistryMBean, MBeanRegistration {
      * <code>MBeanServer</code> instance.
      *
      * @return the MBean server
+     * 这个地方就比较优秀了 他是MBean管理器（新大陆）
      */
     public MBeanServer getMBeanServer() {
         if (server == null) {

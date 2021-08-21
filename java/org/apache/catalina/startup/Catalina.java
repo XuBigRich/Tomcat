@@ -277,6 +277,8 @@ public class Catalina {
      *
      * @return the main digester to parse server.xml
      * 此方法就是给 Digester实例（xml解析器）添加各种 解析规则
+     * <p>
+     * 配置文件中 所有Listener 结尾的数据都将被添加到 LifecycleMBeanBase 的 lifecycleListeners属性
      */
     protected Digester createStartDigester() {
         //获取系统时间

@@ -73,21 +73,24 @@ public class Connector extends LifecycleMBeanBase  {
         this(null);
     }
 
-
+    //设置协议为http/1.1
     public Connector(String protocol) {
         setProtocol(protocol);
         // Instantiate protocol handler
         ProtocolHandler p = null;
         try {
+            //庄子啊HTTP/1.1处理类
             Class<?> clazz = Class.forName(protocolHandlerClassName);
+            //进行初始化
             p = (ProtocolHandler) clazz.getConstructor().newInstance();
         } catch (Exception e) {
             log.error(sm.getString(
                     "coyoteConnector.protocolHandlerInstantiationFailed"), e);
         } finally {
+            //给Connector赋值一个属性
             this.protocolHandler = p;
         }
-
+        //这个地方如果没有特殊声明使用的编码是ISO_8859_1
         if (Globals.STRICT_SERVLET_COMPLIANCE) {
             uriCharset = StandardCharsets.ISO_8859_1;
         } else {
@@ -236,6 +239,7 @@ public class Connector extends LifecycleMBeanBase  {
     /**
      * Coyote Protocol handler class name.
      * Defaults to the Coyote HTTP/1.1 protocolHandler.
+     *  HTTP/1.1 协议处理类的全名 ，用于装载
      */
     protected String protocolHandlerClassName =
         "org.apache.coyote.http11.Http11NioProtocol";
@@ -603,7 +607,7 @@ public class Connector extends LifecycleMBeanBase  {
 
     /**
      * Set the Coyote protocol which will be used by the connector.
-     *
+     *在初始化的时候进行了调用，他传入使用的交互协议，设置
      * @param protocol The Coyote protocol name
      *
      * @deprecated Will be removed in Tomcat 9. Protocol must be configured via
@@ -614,7 +618,7 @@ public class Connector extends LifecycleMBeanBase  {
 
         boolean aprConnector = AprLifecycleListener.isAprAvailable() &&
                 AprLifecycleListener.getUseAprConnector();
-
+        //如果交互协议为http1.1
         if ("HTTP/1.1".equals(protocol) || protocol == null) {
             if (aprConnector) {
                 setProtocolHandlerClassName("org.apache.coyote.http11.Http11AprProtocol");

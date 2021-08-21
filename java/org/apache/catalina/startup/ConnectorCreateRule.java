@@ -63,7 +63,7 @@ public class ConnectorCreateRule extends Rule {
         if (attributes.getValue("executor") != null) {
             ex = svc.getExecutor(attributes.getValue("executor"));
         }
-        //初始化一个Connector 将协议设置为配置文件中的 协议
+        //初始化一个Connector 将协议设置为配置文件中的 协议 ，这个地方会加载http1.1协议解析器
         Connector con = new Connector(attributes.getValue("protocol"));
         if (ex != null) {
             setExecutor(con, ex);

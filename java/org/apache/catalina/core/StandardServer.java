@@ -81,6 +81,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
 
         if (isUseNaming()) {
             namingContextListener = new NamingContextListener();
+            //给LifecycleBase 添加LifecycleListener 监听器
             addLifecycleListener(namingContextListener);
         } else {
             namingContextListener = null;
@@ -797,10 +798,11 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     /**
      * Invoke a pre-startup initialization. This is used to allow connectors
      * to bind to restricted ports under Unix operating environments.
+     * 执行真正的初始化
      */
     @Override
     protected void initInternal() throws LifecycleException {
-
+        //先是调用super.initInternal()，把自己注册到jmx
         super.initInternal();
 
         // Register global String cache

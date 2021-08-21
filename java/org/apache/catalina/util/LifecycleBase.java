@@ -87,6 +87,7 @@ public abstract class LifecycleBase implements Lifecycle {
 
     /**
      * {@inheritDoc}
+     * 添加LifecycleListener 监听器
      */
     @Override
     public void addLifecycleListener(LifecycleListener listener) {
@@ -136,7 +137,7 @@ public abstract class LifecycleBase implements Lifecycle {
         }
 
         try {
-            //设置Lifecycle状态为初始化中状态
+            //设置Lifecycle状态为初始化中状态, 并对
             setStateInternal(LifecycleState.INITIALIZING, null, false);
             //进行初始化
             initInternal();
