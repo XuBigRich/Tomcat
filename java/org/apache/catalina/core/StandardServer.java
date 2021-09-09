@@ -817,14 +817,18 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         onameMBeanFactory = register(factory, "type=MBeanFactory");
 
         // Register the naming resources
+        //对server.xml中的GlobalNamingResources 进行初始化
         globalNamingResources.init();
 
         // Populate the extension validator with JARs from common and shared
         // class loaders
+        //获取卡特琳娜
         if (getCatalina() != null) {
+            //获取卡特琳娜的类加载器
             ClassLoader cl = getCatalina().getParentClassLoader();
             // Walk the class loader hierarchy. Stop at the system class loader.
             // This will add the shared (if present) and common class loaders
+            //判断卡特琳娜加载器是否为null
             while (cl != null && cl != ClassLoader.getSystemClassLoader()) {
                 if (cl instanceof URLClassLoader) {
                     URL[] urls = ((URLClassLoader) cl).getURLs();
@@ -848,6 +852,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
             }
         }
         // Initialize our defined Services
+        //从这个地方开始加载server.xml声明的 服务 ，此处服务只有一个就是 <Service name="Catalina">
         for (int i = 0; i < services.length; i++) {
             services[i].init();
         }

@@ -129,7 +129,7 @@ public abstract class LifecycleBase implements Lifecycle {
         }
     }
 
-
+    //这是一个父类的 init ，他可能被代表子类执行
     @Override
     public final synchronized void init() throws LifecycleException {
         if (!state.equals(LifecycleState.NEW)) {

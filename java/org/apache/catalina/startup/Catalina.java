@@ -694,6 +694,7 @@ public class Catalina {
         // Start the new server
         try {
             //进行服务初始化，会将生成好的server对象进行初始化，更改Lifecycle.state状态
+            //这个地方会对 server.xml的所有类进行初始化
             getServer().init();
         } catch (LifecycleException e) {
             if (Boolean.getBoolean("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE")) {

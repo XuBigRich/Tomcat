@@ -143,7 +143,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
 
     /**
-     * Poller thread count.
+     * Poller thread count.   返回可用于Java虚拟机的处理器数量。  与2 一起取最小值
      */
     private int pollerThreadCount = Math.min(2,Runtime.getRuntime().availableProcessors());
     public void setPollerThreadCount(int pollerThreadCount) { this.pollerThreadCount = pollerThreadCount; }
@@ -271,10 +271,11 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             }
 
             initializeConnectionLatch();
-
-            // Start poller threads
+            // TODO NIO启动线程池
+            // Start poller threads   声明一个轮询数组，数组大小为可用于Java虚拟机的处理器数量。 与2 的最小值   pollers是主要处理接收请求的处理函数
             pollers = new Poller[getPollerThreadCount()];
             for (int i=0; i<pollers.length; i++) {
+                //对Poller进行初始化
                 pollers[i] = new Poller();
                 Thread pollerThread = new Thread(pollers[i], getName() + "-ClientPoller-"+i);
                 pollerThread.setPriority(threadPriority);
@@ -639,7 +640,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
     }
 
     /**
-     * Poller class.
+     * Poller class.   轮询类
      */
     public class Poller implements Runnable {
 
@@ -653,7 +654,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
         private AtomicLong wakeupCounter = new AtomicLong(0);
 
         private volatile int keyCount = 0;
-
+        //Selector 检查器
         public Poller() throws IOException {
             this.selector = Selector.open();
         }

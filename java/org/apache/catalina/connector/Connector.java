@@ -1041,21 +1041,22 @@ public class Connector extends LifecycleMBeanBase  {
 
     /**
      * Begin processing requests via this Connector.
-     *
+     * 开始处理请求
      * @exception LifecycleException if a fatal startup error occurs
      */
     @Override
     protected void startInternal() throws LifecycleException {
-
+        //验证一下端口是否有问题
         // Validate settings before starting
         if (getPort() < 0) {
             throw new LifecycleException(sm.getString(
                     "coyoteConnector.invalidPort", Integer.valueOf(getPort())));
         }
-
+        //设置状态正在初始化
         setState(LifecycleState.STARTING);
 
         try {
+            //对协议处理器开始 执行
             protocolHandler.start();
         } catch (Exception e) {
             throw new LifecycleException(

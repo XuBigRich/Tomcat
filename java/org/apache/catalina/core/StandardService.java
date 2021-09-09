@@ -88,7 +88,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
      *
      */
     protected final ArrayList<Executor> executors = new ArrayList<>();
-
+    //Engine 配置于Service 属于<Service name="Catalina">
     private Engine engine = null;
 
     private ClassLoader parentClassLoader = null;
@@ -522,6 +522,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
 
     /**
+     * <Service name="Catalina"> 或许也继承自这个类
      * Invoke a pre-startup initialization. This is used to allow connectors
      * to bind to restricted ports under Unix operating environments.
      */

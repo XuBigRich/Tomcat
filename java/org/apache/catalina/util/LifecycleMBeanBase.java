@@ -56,7 +56,7 @@ public abstract class LifecycleMBeanBase extends LifecycleBase
         // preRegister().
         if (oname == null) {
             mserver = Registry.getRegistry(null, null).getMBeanServer();
-            //将自己注册到jmx
+            //将自己注册到jmx ，因为他是一个父类，所以凡是继承自他的子类，都可能被托管入 jmx中去
             oname = register(this, getObjectNameKeyProperties());
         }
     }

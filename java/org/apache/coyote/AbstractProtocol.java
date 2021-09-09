@@ -583,7 +583,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         String endpointName = getName();
         endpoint.setName(endpointName.substring(1, endpointName.length()-1));
         endpoint.setDomain(domain);
-
+        // TODO 对io 进行初始化 这个地方几乎就是 初始化的终点了
         endpoint.init();
     }
 
@@ -593,7 +593,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         if (getLog().isInfoEnabled()) {
             getLog().info(sm.getString("abstractProtocolHandler.start", getName()));
         }
-
+        //nio开始执行  这个地方是关键   //TODO 开启执行Nio操作
         endpoint.start();
 
         // Start timeout thread
