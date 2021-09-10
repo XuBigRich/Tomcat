@@ -45,6 +45,7 @@ public class TaskThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable r) {
+        //TaskThread是一个线程的包装类
         TaskThread t = new TaskThread(group, r, namePrefix + threadNumber.getAndIncrement());
         t.setDaemon(daemon);
         t.setPriority(threadPriority);
@@ -57,6 +58,7 @@ public class TaskThreadFactory implements ThreadFactory {
                     t, getClass().getClassLoader());
             AccessController.doPrivileged(pa);
         } else {
+            //设置线程上下文加载器为t
             t.setContextClassLoader(getClass().getClassLoader());
         }
 

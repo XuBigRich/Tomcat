@@ -482,6 +482,7 @@ public abstract class AbstractEndpoint<S> {
 
     /**
      * External Executor based thread pool.
+     * 线程池执行器
      */
     private Executor executor = null;
     public void setExecutor(Executor executor) {
@@ -890,9 +891,13 @@ public abstract class AbstractEndpoint<S> {
 
 
     public void createExecutor() {
+
         internalExecutor = true;
+        //创建工作队列
         TaskQueue taskqueue = new TaskQueue();
+        //建立一个TaskThreadFactory
         TaskThreadFactory tf = new TaskThreadFactory(getName() + "-exec-", daemon, getThreadPriority());
+        //创建一个线程池
         executor = new ThreadPoolExecutor(getMinSpareThreads(), getMaxThreads(), 60, TimeUnit.SECONDS,taskqueue, tf);
         taskqueue.setParent( (ThreadPoolExecutor) executor);
     }
@@ -1185,12 +1190,13 @@ public abstract class AbstractEndpoint<S> {
         }
     }
 
-
+    //这个类是所有io的 父类，这个start方法是启动所有io的父类方法
     public final void start() throws Exception {
         if (bindState == BindState.UNBOUND) {
             bind();
             bindState = BindState.BOUND_ON_START;
         }
+        //调用子类的io
         startInternal();
     }
 
