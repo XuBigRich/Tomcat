@@ -237,12 +237,15 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
     /**
      * Initialize the endpoint.
+     * 初始化通道，用于接收通讯信息的，服务于http请求等功能
      */
     @Override
     public void bind() throws Exception {
 
         if (!getUseInheritedChannel()) {
+            //开启一个通道
             serverSock = ServerSocketChannel.open();
+            //TODO 读到这了
             socketProperties.setProperties(serverSock.socket());
             InetSocketAddress addr = (getAddress() != null ? new InetSocketAddress(getAddress(), getPort()) : new InetSocketAddress(getPort()));
             serverSock.socket().bind(addr, getAcceptCount());
@@ -283,6 +286,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
     public void startInternal() throws Exception {
 
         if (!running) {
+            //在初始化阶段就将父类的running变为true
             running = true;
             paused = false;
             //建立一个栈，初始大小为128 ，上限为 500的processorCache栈
@@ -300,7 +304,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             if (getExecutor() == null) {
                 createExecutor();
             }
-
+            //初始化 一个锁，赋值给自己的父类的connectionLimitLatch属性
             initializeConnectionLatch();
             // TODO NIO启动线程池
             // Start poller threads   声明一个轮询数组，数组大小为可用于Java虚拟机的处理器数量。 与2 的最小值   pollers是主要处理接收请求的处理函数
@@ -313,7 +317,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                 pollerThread.setDaemon(true);
                 pollerThread.start();
             }
-
+            //
             startAcceptorThreads();
         }
     }
@@ -481,6 +485,10 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
     /**
      * The background thread that listens for incoming TCP/IP connections and
      * hands them off to an appropriate processor.
+     * 这个类实现了AbstractEndpoint.Acceptor 抽象类
+     * 提供了Nio自己的Acceptor实现方案
+     * 开始的时候 running 默认是false 需要等待时机变为true
+     * 这是单独生成的线程，他将一直执行下去 ，其剩余逻辑都将在此执行
      */
     protected class Acceptor extends AbstractEndpoint.Acceptor {
 
@@ -491,7 +499,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
             // Loop until we receive a shutdown command
             while (running) {
-
+                //paused在nio初始化的时候为false，running设置为了true
                 // Loop if endpoint is paused
                 while (paused && running) {
                     state = AcceptorState.PAUSED;
@@ -501,14 +509,16 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                         // Ignore
                     }
                 }
-
+                //检查是否退出
                 if (!running) {
                     break;
                 }
+                //设置Acceptor状态为RUNNING
                 state = AcceptorState.RUNNING;
 
                 try {
                     //if we have reached max connections, wait
+                    //判断是否到达最大连接数，如果到达最大连接数 将等待
                     countUpOrAwaitConnection();
 
                     SocketChannel socket = null;

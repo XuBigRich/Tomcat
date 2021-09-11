@@ -583,7 +583,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
         String endpointName = getName();
         endpoint.setName(endpointName.substring(1, endpointName.length()-1));
         endpoint.setDomain(domain);
-        // TODO 对io 进行初始化 这个地方几乎就是 初始化的终点了
+        // TODO 对io 进行初始化 这个地方几乎就是 初始化的终点了  初始化socket 初始化selector
+        //当前对象是 apache.coyote.Http11NioProtocol
+        //  他的endpoint 属性 是由tomcat.util.net.NioEndpoint
+        //  它可以用于初始化socketChannel，和selector
         endpoint.init();
     }
 

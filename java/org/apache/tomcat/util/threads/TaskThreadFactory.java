@@ -26,6 +26,7 @@ import org.apache.tomcat.util.security.PrivilegedSetTccl;
 /**
  * Simple task thread factory to use to create threads for an executor
  * implementation.
+ * 简单的线程工厂使使用他创建线程执行， 继承了ThreadFactory，一般情况下 线程池会对线程工厂的newThread方法进行调用
  */
 public class TaskThreadFactory implements ThreadFactory {
 
@@ -35,6 +36,13 @@ public class TaskThreadFactory implements ThreadFactory {
     private final boolean daemon;
     private final int threadPriority;
 
+    /**
+     * 任务线程工厂的初始化方法，传入名字前缀，是否是守护线程，线程优先级
+     *
+     * @param namePrefix
+     * @param daemon
+     * @param priority
+     */
     public TaskThreadFactory(String namePrefix, boolean daemon, int priority) {
         SecurityManager s = System.getSecurityManager();
         group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
@@ -45,7 +53,7 @@ public class TaskThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable r) {
-        //TaskThread是一个线程的包装类
+        //TaskThread是一个线程的包装类,创建一个线程，传入线程组，名称前缀+线程序号
         TaskThread t = new TaskThread(group, r, namePrefix + threadNumber.getAndIncrement());
         t.setDaemon(daemon);
         t.setPriority(threadPriority);
@@ -53,6 +61,7 @@ public class TaskThreadFactory implements ThreadFactory {
         // Set the context class loader of newly created threads to be the class
         // loader that loaded this factory. This avoids retaining references to
         // web application class loaders and similar.
+        //判断是否是安全模式启动 ，这么做的意义就是设置线程的上下文加载器
         if (Constants.IS_SECURITY_ENABLED) {
             PrivilegedAction<Void> pa = new PrivilegedSetTccl(
                     t, getClass().getClassLoader());

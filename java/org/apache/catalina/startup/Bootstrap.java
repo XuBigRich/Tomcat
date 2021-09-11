@@ -545,7 +545,7 @@ public final class Bootstrap {
             } else if (command.equals("start")) {
                 //如果没有传入参数 直接进入这个  方法  实例的bootstrap开始对参数设置
                 daemon.setAwait(true);
-                //加载启动 传入的参数
+                //加载启动 传入的参数  这个地方会初始化socketChannel
                 daemon.load(args);
                 //启动org.apache.catalina.startup.Catalina 这个类的 start方式
                 daemon.start();

@@ -27,6 +27,7 @@ import org.apache.juli.logging.LogFactory;
  * Shared latch that allows the latch to be acquired a limited number of times
  * after which all subsequent requests to acquire the latch will be placed in a
  * FIFO queue until one of the shares is returned.
+ * 共享线程锁，
  */
 public class LimitLatch {
 
@@ -39,11 +40,16 @@ public class LimitLatch {
         }
 
         @Override
+        //去判断拿锁  AQS会判断tryAcquireShared的返回值
         protected int tryAcquireShared(int ignored) {
+            //count在基础上
             long newCount = count.incrementAndGet();
+            //当newCount大于了限制的大小数时，且released为false时 那么进入 count.decrementAndGet();
             if (!released && newCount > limit) {
                 // Limit exceeded
+                //如果成立count会进行-1 恢复原状
                 count.decrementAndGet();
+                //AQS会判断这个值是否为正/负
                 return -1;
             } else {
                 return 1;
@@ -58,6 +64,7 @@ public class LimitLatch {
     }
 
     private final Sync sync;
+    //好似一个计数器 这个计数器初始为0
     private final AtomicLong count;
     private volatile long limit;
     private volatile boolean released = false;
@@ -114,6 +121,7 @@ public class LimitLatch {
         if (log.isDebugEnabled()) {
             log.debug("Counting up["+Thread.currentThread().getName()+"] latch="+getCount());
         }
+        //这个地方aqs会回调 tryAcquireShared 方法  ，这个地方可能会造成线程暂停
         sync.acquireSharedInterruptibly(1);
     }
 
