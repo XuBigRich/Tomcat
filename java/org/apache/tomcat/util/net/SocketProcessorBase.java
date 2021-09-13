@@ -18,6 +18,10 @@ package org.apache.tomcat.util.net;
 
 import java.util.Objects;
 
+/**
+ * 这个类是处理http请求的关键类
+ * @param <S>
+ */
 public abstract class SocketProcessorBase<S> implements Runnable {
 
     protected SocketWrapperBase<S> socketWrapper;

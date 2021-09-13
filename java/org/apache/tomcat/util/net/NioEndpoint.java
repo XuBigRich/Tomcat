@@ -189,7 +189,9 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
      * @return The next poller in sequence
      */
     public Poller getPoller0() {
+        //pollerRotater.incrementAndGet()的绝对值 ，与pollers.length取余数
         int idx = Math.abs(pollerRotater.incrementAndGet()) % pollers.length;
+        //返回计算后的Poller
         return pollers[idx];
     }
 
@@ -281,6 +283,8 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
         //TODO 初始化ssl  这个有兴趣可以精读
         initialiseSsl();
         //启动多路复用器池子，因为此时此刻ServerSocket已经建立好了
+        //这个池子里只有一个多路复用器，给这个服务的下面建立一个多路复用器
+        //open会启动一个线程
         selectorPool.open();
     }
 
@@ -453,13 +457,15 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                 if (isSSLEnabled()) {
                     channel = new SecureNioChannel(socket, bufhandler, selectorPool, this);
                 } else {
+                    //此处将SocketBufferHandler 与 建立链接的socket 共同生成一个NioChannel对象
                     channel = new NioChannel(socket, bufhandler);
                 }
             } else {
                 channel.setIOChannel(socket);
                 channel.reset();
             }
-            //当有socket发起请求时，会获取一个poller ，将channel注册进去
+            //当有socket发起请求时，会先获取poller （根据算法获取），将channel注册进去，
+            //将channel 放入events队列中去
             getPoller0().register(channel);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -552,6 +558,9 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                     if (running && !paused) {
                         // setSocketOptions() will hand the socket off to
                         // an appropriate processor if successful
+                        //setSocketOptions会将接收到的socket赋值给一个多路复用器
+                        //一切顺利的话会返回true ，如果失败会返回false
+                        //setSocketOptions 方法会将socket 放入events队列中去
                         if (!setSocketOptions(socket)) {
                             closeSocket(socket);
                         }
@@ -632,6 +641,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             reset(ch, w, intOps);
         }
 
+        //替换重置事件属性
         public void reset(NioChannel ch, NioSocketWrapper w, int intOps) {
             socket = ch;
             interestOps = intOps;
@@ -690,7 +700,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
     }
 
     /**
-     * Poller class.   轮询类
+     * Poller class.   轮询类 他继承自多线程
      */
     public class Poller implements Runnable {
 
@@ -765,6 +775,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
         /**
          * Processes events in the event queue of the Poller.
+         * 处理轮询器的事件队列中的事件。
          *
          * @return <code>true</code> if some events were processed,
          * <code>false</code> if queue was empty
@@ -793,9 +804,12 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
          * Registers a newly created socket with the poller.
          *
          * @param socket The newly created socket
+         *               注册最新创建的socket到poller中
+         *               这里的注册方法就是 将包装好的事件放入到，队列中
          */
         public void register(final NioChannel socket) {
             socket.setPoller(this);
+            //包装类 对socket与NioEndpoint进行包装
             NioSocketWrapper ka = new NioSocketWrapper(socket, NioEndpoint.this);
             socket.setSocketWrapper(ka);
             ka.setPoller(this);
@@ -805,10 +819,15 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             ka.setSecure(isSSLEnabled());
             ka.setReadTimeout(getConnectionTimeout());
             ka.setWriteTimeout(getConnectionTimeout());
+            //从eventCache栈中 取出一个事件
             PollerEvent r = eventCache.pop();
             ka.interestOps(SelectionKey.OP_READ);//this is what OP_REGISTER turns into.
+            //判断栈中是否有数据，如果没有数据，构建一个轮训事件，传入刚刚产生的socket 与通道包装类NioChannel
+            //注册事件 REGISTER（登记表）
             if (r == null) r = new PollerEvent(socket, ka, OP_REGISTER);
+                //如果从栈中取出了事件 那么执行事件的rest方法
             else r.reset(socket, ka, OP_REGISTER);
+            //将事件放入队列
             addEvent(r);
         }
 
@@ -1180,7 +1199,9 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
         public NioSocketWrapper(NioChannel channel, NioEndpoint endpoint) {
             super(channel, endpoint);
+            //socket多路复用器
             pool = endpoint.getSelectorPool();
+            //对应的通道处理方法
             socketBufferHandler = channel.getBufHandler();
         }
 

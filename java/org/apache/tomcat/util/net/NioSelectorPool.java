@@ -58,7 +58,7 @@ public class NioSelectorPool {
     protected AtomicInteger spare = new AtomicInteger(0);
     protected ConcurrentLinkedQueue<Selector> selectors =
             new ConcurrentLinkedQueue<>();
-
+    //这个方法可以生成一个多路复用器，此方法是一个单例方法
     protected Selector getSharedSelector() throws IOException {
         if (SHARED && SHARED_SELECTOR == null) {
             synchronized ( NioSelectorPool.class ) {
@@ -128,9 +128,13 @@ public class NioSelectorPool {
     public void open() throws IOException {
         //设置selector为打开状态
         enabled = true;
+        //给SHARED_SELECTOR 属性赋值
         getSharedSelector();
+        //如果共享
         if (SHARED) {
+            //创建一个NioBlockingSelector对象，用于包装 多路复用器
             blockingSelector = new NioBlockingSelector();
+            //启动线程给线程赋值多路复用器
             blockingSelector.open(getSharedSelector());
         }
 
@@ -257,7 +261,7 @@ public class NioSelectorPool {
                 }
                 if ( selector != null ) {//perform a blocking read
                     //register OP_WRITE to the selector
-                    if (key==null) key = socket.getIOChannel().register(selector, SelectionKey.OP_READ);
+                    if (key==null) key = socket.getIOChannel().register(selector,  SelectionKey.OP_READ);
                     else key.interestOps(SelectionKey.OP_READ);
                     if (readTimeout==0) {
                         timedout = (read==0);
