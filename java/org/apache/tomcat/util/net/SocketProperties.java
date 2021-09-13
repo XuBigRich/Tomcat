@@ -211,14 +211,18 @@ public class SocketProperties {
 
     public void setProperties(ServerSocket socket) throws SocketException{
         if (rxBufSize != null)
+            //设置socket缓冲区大小
             socket.setReceiveBufferSize(rxBufSize.intValue());
         if (performanceConnectionTime != null && performanceLatency != null &&
                 performanceBandwidth != null)
+            //设置ServerSocket的性能
+            //第一个描述低延迟 高带宽的短连接时间
             socket.setPerformancePreferences(
                     performanceConnectionTime.intValue(),
                     performanceLatency.intValue(),
                     performanceBandwidth.intValue());
         if (soReuseAddress != null)
+            //设置socket是否需要等待2MSL
             socket.setReuseAddress(soReuseAddress.booleanValue());
         if (soTimeout != null && soTimeout.intValue() >= 0)
             socket.setSoTimeout(soTimeout.intValue());

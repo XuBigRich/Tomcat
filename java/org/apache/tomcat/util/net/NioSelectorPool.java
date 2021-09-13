@@ -126,6 +126,7 @@ public class NioSelectorPool {
     }
 
     public void open() throws IOException {
+        //设置selector为打开状态
         enabled = true;
         getSharedSelector();
         if (SHARED) {

@@ -384,7 +384,7 @@ public class SecureNioChannel extends NioChannel  {
                         long now = System.currentTimeMillis();
                         if (selector==null) {
                             selector = Selector.open();
-                            key = getIOChannel().register(selector, hsStatus);
+                            key = getIOChannel()    .register(selector, hsStatus);
                         } else {
                             key.interestOps(hsStatus); // null warning suppressed
                         }
