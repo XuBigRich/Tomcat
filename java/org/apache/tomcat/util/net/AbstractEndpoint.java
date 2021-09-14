@@ -1196,6 +1196,9 @@ public abstract class AbstractEndpoint<S> {
      * @param dispatch      Should the processing be performed on a new
      *                      container thread
      * @return if processing was triggered successfully
+     *
+     * 这个方法通常是由clientPoller 线程进行调用的
+     *
      */
     public boolean processSocket(SocketWrapperBase<S> socketWrapper,
                                  SocketEvent event, boolean dispatch) {
@@ -1203,14 +1206,19 @@ public abstract class AbstractEndpoint<S> {
             if (socketWrapper == null) {
                 return false;
             }
+            //这个地方会到导出处理http请求类
             SocketProcessorBase<S> sc = processorCache.pop();
             if (sc == null) {
+                //这个地方生成处理http请求类
+//                sc就是 处理http请求的类
                 sc = createSocketProcessor(socketWrapper, event);
             } else {
                 sc.reset(socketWrapper, event);
             }
+            //获取线程执行器，
             Executor executor = getExecutor();
             if (dispatch && executor != null) {
+                //由线程池执行处理http请求类，因为这个处理类是实现了runnable接口，可以有线程池去执行（增快速度！！！）
                 executor.execute(sc);
             } else {
                 sc.run();
@@ -1338,9 +1346,11 @@ public abstract class AbstractEndpoint<S> {
         int count = getAcceptorThreadCount();
         //建立一个数组 大小为count，Acceptor是一个抽象类他的实现类需要实现Runnable接口
         acceptors = new Acceptor[count];
-        //这个for循环的意义就是给数组元素赋值
+        //这个for循环的意义就是给数组元素赋值，数组中得每一个元素都可以接收socket请求建立连接得信号
+        //然后通过多线程的方式启动他们
         for (int i = 0; i < count; i++) {
-            //createAcceptor的具体实现是由子类实现的
+            //createAcceptor的具体实现是由子类实现的，他负责接收socket建立连接得请求
+            //TODO 关键关键，接收socket请求连接得关键 ，他继承自Runnable
             acceptors[i] = createAcceptor();
             String threadName = getName() + "-Acceptor-" + i;
             //给线程设置名字
@@ -1348,6 +1358,7 @@ public abstract class AbstractEndpoint<S> {
             Thread t = new Thread(acceptors[i], threadName);
             t.setPriority(getAcceptorThreadPriority());
             t.setDaemon(getDaemon());
+            //启动多线程执行acceptors的run方法
             t.start();
         }
     }
