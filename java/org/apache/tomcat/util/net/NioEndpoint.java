@@ -717,7 +717,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
     }
 
     /**
-     * Poller class.   轮询类 他继承自多线程
+     * Poller class.   轮询类 他继承自多线程  监听者
      */
     public class Poller implements Runnable {
 
@@ -802,7 +802,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             boolean result = false;
             //声明PollerEvent类型
             PollerEvent pe = null;
-            //检查events<PollerEvent> 队列中是否有 数据，如果存在数据 那就遍历他们
+            //检查events<PollerEvent> 队列中是否有 数据，如果存在数据 那就遍历他们 （查看是否有事件发生）
             for (int i = 0, size = events.size(); i < size && (pe = events.poll()) != null; i++) {
                 //result代表数据事件已经被处理
                 result = true;
@@ -926,6 +926,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
                 try {
                     if (!close) {
+                        //事件处理器 执行Poller 事件 处理器   监听者模式
                         hasEvents = events();
                         if (wakeupCounter.getAndSet(-1) > 0) {
                             //if we are here, means we have other stuff to do
@@ -937,7 +938,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                         wakeupCounter.set(0);
                     }
                     if (close) {
-                        //事件处理器
+                        //事件处理器 执行Poller 事件 处理器   监听者模式
                         events();
                         timeout(0, false);
                         try {
