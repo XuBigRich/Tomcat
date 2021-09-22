@@ -96,6 +96,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
     /**
      * Cache for poller events
+     * 由Poller类 往 这个堆栈中放入 PollerEven事件
      */
     private SynchronizedStack<PollerEvent> eventCache;
 
@@ -435,6 +436,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
     /**
      * Process the specified connection.
+     * 处理指定的socket连接
      *
      * @param socket The socket channel
      * @return <code>true</code> if the socket was correctly configured
@@ -449,7 +451,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             //获取到建立连接得socket
             Socket sock = socket.socket();
             socketProperties.setProperties(sock);
-
+            //nioChannels 出栈一个NioChannel
             NioChannel channel = nioChannels.pop();
             if (channel == null) {
                 SocketBufferHandler bufhandler = new SocketBufferHandler(
@@ -463,11 +465,15 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                     channel = new NioChannel(socket, bufhandler);
                 }
             } else {
+                //将socket赋值给这个channel
                 channel.setIOChannel(socket);
+                //给NioChannel对象进行一系列初始化
                 channel.reset();
             }
             //当有socket发起请求时，会先获取poller （根据算法获取），将channel注册进去，
             //将channel 放入events队列中去 ，这个地方会将channel的读取事件注册到多路复用器当中
+            //根据逻辑筛选出一个Poller用于处理这个通道的逻辑行为
+            //至此，socket建立连接到此结束，他最终就是将channel 放入events队列中去，我们剩下的就是查看 到底是谁使用了Poller的events队列  （是Poller线程的run方法 一直在检测events队列）
             getPoller0().register(channel);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -601,7 +607,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
     @Override
     /**
-     * 插眼这个地方是生成处理http请求的类
+     * 插眼这个地方是生成处理http请求的类，也会进行http的请求处理，此时socket连接已经建立
      */
     protected SocketProcessorBase<NioChannel> createSocketProcessor(
             SocketWrapperBase<NioChannel> socketWrapper, SocketEvent event) {
@@ -718,6 +724,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
     /**
      * Poller class.   轮询类 他继承自多线程
+     * 这个类会处理http请求，处理socket的连接，事件注册等工作
      */
     public class Poller implements Runnable {
 
@@ -813,6 +820,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                     pe.reset();
                     //将事件放回到evenCache中
                     if (running && !paused) {
+                        //如果有事件发生，会将events队列中的事件取出，放入到eventCache栈中去（我们还需要关注到底是谁在处理栈信息）
                         eventCache.push(pe);
                     }
                 } catch (Throwable x) {
@@ -851,7 +859,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             if (r == null) r = new PollerEvent(socket, ka, OP_REGISTER);
                 //如果从栈中取出了事件 那么执行事件的rest方法
             else r.reset(socket, ka, OP_REGISTER);
-            //将事件放入队列
+            //将事件放入队列，到底是哪个线程执行消费这个Event（事件）呢
             addEvent(r);
         }
 
@@ -926,6 +934,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
                 try {
                     if (!close) {
+                        //这里检查队列中是否有（事件）消息产生，（只要有连接建立 这个队列中就会产生事件）
                         hasEvents = events();
                         if (wakeupCounter.getAndSet(-1) > 0) {
                             //if we are here, means we have other stuff to do
@@ -934,6 +943,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                         } else {
                             keyCount = selector.select(selectorTimeout);
                         }
+                        //最终将wakeupCounter设置为0 0是>-1的
                         wakeupCounter.set(0);
                     }
                     if (close) {
@@ -1003,7 +1013,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                             // Read goes before write
                             //如果key键为读事件
                             if (sk.isReadable()) {
-                                //这个方法里面会创建http请求处理类，给这个socket注册一个读事件，多线程处理
+                                //这个方法里面会创建http请求处理类，给这个socket注册一个读事件，多线程处理  socket连接已经建立
                                 if (!processSocket(attachment, SocketEvent.OPEN_READ, true)) {
                                     closeSocket = true;
                                 }
@@ -1799,6 +1809,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                     if (event == null) {
                         state = getHandler().process(socketWrapper, SocketEvent.OPEN_READ);
                     } else {
+                        //收到了连接请求
                         state = getHandler().process(socketWrapper, event);
                     }
                     if (state == SocketState.CLOSED) {

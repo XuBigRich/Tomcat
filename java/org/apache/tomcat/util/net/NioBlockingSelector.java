@@ -114,6 +114,7 @@ public class NioBlockingSelector {
                 }
                 try {
                     if (att.getWriteLatch() == null || att.getWriteLatch().getCount() == 0) att.startWriteLatch(1);
+                    //这个地方实际是进行socket写事件注册
                     poller.add(att, SelectionKey.OP_WRITE, reference);
                     if (writeTimeout < 0) {
                         att.awaitWriteLatch(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
@@ -310,6 +311,7 @@ public class NioBlockingSelector {
                             keyCount = selector.selectNow();
                         else {
                             wakeupCounter.set(-1);
+                            //启动多路复用器的检查工作
                             keyCount = selector.select(1000);
                         }
                         wakeupCounter.set(0);
