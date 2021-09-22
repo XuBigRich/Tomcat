@@ -607,7 +607,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
     @Override
     /**
-     * 插眼这个地方是生成处理http请求的类，也会进行http的请求处理，此时socket连接已经建立
+     * 插眼这个地方是生成处理http请求的类
      */
     protected SocketProcessorBase<NioChannel> createSocketProcessor(
             SocketWrapperBase<NioChannel> socketWrapper, SocketEvent event) {
@@ -809,7 +809,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             boolean result = false;
             //声明PollerEvent类型
             PollerEvent pe = null;
-            //检查events<PollerEvent> 队列中是否有 数据，如果存在数据 那就遍历他们
+            //检查events<PollerEvent> 队列中是否有 数据，如果存在数据 那就遍历他们 （查看是否有事件发生）
             for (int i = 0, size = events.size(); i < size && (pe = events.poll()) != null; i++) {
                 //result代表数据事件已经被处理
                 result = true;
@@ -935,6 +935,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                 try {
                     if (!close) {
                         //这里检查队列中是否有（事件）消息产生，（只要有连接建立 这个队列中就会产生事件）
+                        //事件处理器 执行Poller 事件 处理器   监听者模式
                         hasEvents = events();
                         if (wakeupCounter.getAndSet(-1) > 0) {
                             //if we are here, means we have other stuff to do
@@ -947,7 +948,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                         wakeupCounter.set(0);
                     }
                     if (close) {
-                        //事件处理器
+                        //事件处理器 执行Poller 事件 处理器   监听者模式
                         events();
                         timeout(0, false);
                         try {
