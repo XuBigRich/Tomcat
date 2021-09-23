@@ -670,16 +670,17 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
         //PollerEvent事件，他将会将把socket注册到对应的 多路复用器中，
         // 并且携带一个socketWrapper，当有事件发生时，可以通过多路复用器的attachment() 获取到socketWrapper附件
         public void run() {
-            //当这个事件为注册事件时进入if
+            //当这个事件为注册事件(一个新的socket注册到poller轮询中去) 时进入if
             if (interestOps == OP_REGISTER) {
                 try {
                     //给多路复用器添加一个读事件的监听，这个地方是通道注册的关键代码
-                    //读取事件是从这里注册的
+                    //读取事件就是从这里注册的
                     socket.getIOChannel().register(
                             socket.getPoller().getSelector(), SelectionKey.OP_READ, socketWrapper);
                 } catch (Exception x) {
                     log.error(sm.getString("endpoint.nio.registerFail"), x);
                 }
+                //如果不是注册事件，那么就查看这个事件是所属类型
             } else {
                 //如果不是注册事件通过socket的多路复用器取出key
                 final SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
@@ -838,6 +839,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
          * @param socket The newly created socket
          *               注册最新创建的socket到poller中
          *               这里的注册方法就是 将包装好的事件放入到，队列中
+         *               且这个地方只注册 读取事件
          */
         public void register(final NioChannel socket) {
             socket.setPoller(this);
