@@ -814,6 +814,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             // dispatched. Because of delays in the dispatch process, the
             // timeout may no longer be required. Check here and avoid
             // unnecessary processing.
+            // 判断当前socekt事件是否超时
             if (SocketEvent.TIMEOUT == status &&
                     (processor == null ||
                             !processor.isAsync() && !processor.isUpgrade() ||
@@ -821,7 +822,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 // This is effectively a NO-OP
                 return SocketState.OPEN;
             }
-
+            //判断处理类是否为null  一般情况下第一次启动为null
             if (processor != null) {
                 // Make sure an async timeout doesn't fire
                 getProtocol().removeWaitingProcessor(processor);
@@ -830,11 +831,13 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 // longer a processor associated with this socket.
                 return SocketState.CLOSED;
             }
-
+            //当前线程标识设置为true
             ContainerThreadMarker.set();
 
             try {
+                //第一次启动processor通常为null
                 if (processor == null) {
+                    //判断negotiatedProtocol是否有设置值
                     String negotiatedProtocol = wrapper.getNegotiatedProtocol();
                     // OpenSSL typically returns null whereas JSSE typically
                     // returns "" when no protocol is negotiated
@@ -877,23 +880,27 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     if (getLog().isDebugEnabled()) {
                         getLog().debug(sm.getString("abstractConnectionHandler.processorPop", processor));
                     }
-                }
+                }//如果processor依然为null
                 if (processor == null) {
+                    //通过线程池创建一个处理类
                     processor = getProtocol().createProcessor();
+                    //注册http处理类 到MBean管理器中
                     register(processor);
                     if (getLog().isDebugEnabled()) {
                         getLog().debug(sm.getString("abstractConnectionHandler.processorCreate", processor));
                     }
                 }
-
+                //对http处理器设置ssl支持
                 processor.setSslSupport(
                         wrapper.getSslSupport(getProtocol().getClientCertProvider()));
 
                 // Associate the processor with the connection
+                //往connections  Map中 put一个key为传入socket 的处理类
                 connections.put(socket, processor);
 
                 SocketState state = SocketState.CLOSED;
                 do {
+                    //进行对应的socket处理
                     state = processor.process(wrapper, status);
 
                     if (state == SocketState.UPGRADING) {
@@ -1110,7 +1117,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             release(processor);
         }
 
-
+        //给注册一个Processor的处理类，他的意义是将Processor注册到MBean管理器中
         protected void register(Processor processor) {
             if (getProtocol().getDomain() != null) {
                 synchronized (this) {

@@ -23,7 +23,7 @@ package org.apache.tomcat.util.net;
  * pool to execute AsyncContext.start(Runnable).
  */
 public class ContainerThreadMarker {
-
+    //设置当前线程的marker 标识
     private static final ThreadLocal<Boolean> marker = new ThreadLocal<>();
 
     public static boolean isContainerThread() {
