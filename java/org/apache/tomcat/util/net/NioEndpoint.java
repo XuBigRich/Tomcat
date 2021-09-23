@@ -821,6 +821,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                     //将事件放回到evenCache中
                     if (running && !paused) {
                         //如果有事件发生，会将events队列中的事件取出，放入到eventCache栈中去（我们还需要关注到底是谁在处理栈信息）
+                        //将事件压栈
                         eventCache.push(pe);
                     }
                 } catch (Throwable x) {
@@ -850,7 +851,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             ka.setSecure(isSSLEnabled());
             ka.setReadTimeout(getConnectionTimeout());
             ka.setWriteTimeout(getConnectionTimeout());
-            //从eventCache栈中 取出一个事件
+            //从eventCache 栈顶取出一个事件
             PollerEvent r = eventCache.pop();
             //将该socket的 读取事件注册到多路复用器中，
             ka.interestOps(SelectionKey.OP_READ);//this is what OP_REGISTER turns into.
@@ -948,7 +949,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                         wakeupCounter.set(0);
                     }
                     if (close) {
-                        //事件处理器 执行Poller 事件 处理器   监听者模式
+                        //事件处理器 处理events队列中的事件 执行Poller 事件 处理器   监听者模式
                         events();
                         timeout(0, false);
                         try {
@@ -1000,6 +1001,8 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
         }
 
         //当多路复用器发现 有socket处于活跃状态才会调用此方法，传入发生事件的key，或读或写 ，还有发生事件的socket包装类
+        //他会启动提交一个多线程去处理socket事件
+        //这个方法由run方法 在轮询中调用
         protected void processKey(SelectionKey sk, NioSocketWrapper attachment) {
             try {
                 if (close) {
@@ -1015,6 +1018,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                             //如果key键为读事件
                             if (sk.isReadable()) {
                                 //这个方法里面会创建http请求处理类，给这个socket注册一个读事件，多线程处理  socket连接已经建立
+                                //会启动一个新的线程快速处理socket事件
                                 if (!processSocket(attachment, SocketEvent.OPEN_READ, true)) {
                                     closeSocket = true;
                                 }
@@ -1306,18 +1310,22 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             writeLatch = startLatch(writeLatch, cnt);
         }
 
+        //进行 线程等待 的方法
         protected void awaitLatch(CountDownLatch latch, long timeout, TimeUnit unit) throws InterruptedException {
             if (latch == null) throw new IllegalStateException("Latch cannot be null");
             // Note: While the return value is ignored if the latch does time
             //       out, logic further up the call stack will trigger a
             //       SocketTimeoutException
+            //对于指定的ContDownLatch进行 线程等待
             latch.await(timeout, unit);
         }
 
+        //执行对应的线程等待
         public void awaitReadLatch(long timeout, TimeUnit unit) throws InterruptedException {
             awaitLatch(readLatch, timeout, unit);
         }
 
+        //执行对应的线程等待
         public void awaitWriteLatch(long timeout, TimeUnit unit) throws InterruptedException {
             awaitLatch(writeLatch, timeout, unit);
         }
@@ -1483,6 +1491,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
 
         @Override
+        //执行写事件
         protected void doWrite(boolean block, ByteBuffer from) throws IOException {
             long writeTimeout = getWriteTimeout();
             Selector selector = null;
@@ -1769,7 +1778,9 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
         @Override
         protected void doRun() {
+            //从socketWrapper中取出 NioChannel
             NioChannel socket = socketWrapper.getSocket();
+            //得到对应的key
             SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
 
             try {
@@ -1777,6 +1788,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
                 try {
                     if (key != null) {
+                        //这个地方就很搞笑 因为这个地方的if一定成立
                         if (socket.isHandshakeComplete()) {
                             // No TLS handshaking required. Let the handler
                             // process this socket / event combination.
@@ -1807,6 +1819,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                 if (handshake == 0) {
                     SocketState state = SocketState.OPEN;
                     // Process the request from this socket
+                    //处理传入的socket事件
                     if (event == null) {
                         state = getHandler().process(socketWrapper, SocketEvent.OPEN_READ);
                     } else {

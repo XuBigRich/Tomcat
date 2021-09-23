@@ -1197,7 +1197,7 @@ public abstract class AbstractEndpoint<S> {
      *                      container thread
      * @return if processing was triggered successfully
      *
-     * 这个方法通常是由clientPoller 线程进行调用的
+     * 这个方法通常是由NioEndpoint的内部类 Poller类的processKey()方法 进行调用的 （在线程轮询中）
      *
      */
     public boolean processSocket(SocketWrapperBase<S> socketWrapper,

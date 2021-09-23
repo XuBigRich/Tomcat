@@ -55,6 +55,7 @@ public class NioBlockingSelector {
     }
 
     //启动线程 给线程赋值多路复用器
+    //由NioEndpoint bind()方法调用
     public void open(Selector selector) {
         sharedSelector = selector;
         poller = new BlockPoller();
@@ -91,10 +92,13 @@ public class NioBlockingSelector {
             throws IOException {
         SelectionKey key = socket.getIOChannel().keyFor(socket.getPoller().getSelector());
         if (key == null) throw new IOException("Key no longer registered");
+        //出栈一个KeyReference
         KeyReference reference = keyReferenceStack.pop();
+        //如果没有出战的KeyReference new一个
         if (reference == null) {
             reference = new KeyReference();
         }
+        //取出KeyReference携带的附件
         NioSocketWrapper att = (NioSocketWrapper) key.attachment();
         int written = 0;
         boolean timedout = false;
@@ -141,6 +145,7 @@ public class NioBlockingSelector {
         } finally {
             poller.remove(att, SelectionKey.OP_WRITE);
             if (timedout && reference.key != null) {
+                //放入队列中一个事件
                 poller.cancelKey(reference.key);
             }
             reference.key = null;
@@ -184,6 +189,7 @@ public class NioBlockingSelector {
                 }
                 try {
                     if (att.getReadLatch() == null || att.getReadLatch().getCount() == 0) att.startReadLatch(1);
+                    //给socket 在多路复用器上面监听一个读取事件
                     poller.add(att, SelectionKey.OP_READ, reference);
                     if (readTimeout < 0) {
                         att.awaitReadLatch(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
