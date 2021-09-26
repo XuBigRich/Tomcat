@@ -892,9 +892,10 @@ public abstract class AbstractEndpoint<S> {
 
     /**
      * Handling of accepted sockets.
+     * //在读取配置文件初始化时，handler就被赋值了
      */
     private Handler<S> handler = null;
-
+    //在读取配置文件初始化时，handler就被赋值了
     public void setHandler(Handler<S> handler) {
         this.handler = handler;
     }

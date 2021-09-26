@@ -1821,11 +1821,13 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                 if (handshake == 0) {
                     SocketState state = SocketState.OPEN;
                     // Process the request from this socket
-                    //处理传入的socket事件
+                    //处理传入的socket事件  读取 事件
                     if (event == null) {
+                        //在读取配置文件初始化时，handler就被赋值了
                         state = getHandler().process(socketWrapper, SocketEvent.OPEN_READ);
                     } else {
                         //收到了连接请求
+                        //在读取配置文件初始化时，handler就被赋值了
                         state = getHandler().process(socketWrapper, event);
                     }
                     if (state == SocketState.CLOSED) {
