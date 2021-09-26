@@ -75,7 +75,7 @@ public abstract class AbstractProcessor extends AbstractProcessorLight implement
     private ErrorState errorState = ErrorState.NONE;
 
     protected final UserDataHelper userDataHelper;
-
+    //这个地方直接产生request和response 对象
     public AbstractProcessor(AbstractEndpoint<?> endpoint) {
         this(endpoint, new Request(), new Response());
     }

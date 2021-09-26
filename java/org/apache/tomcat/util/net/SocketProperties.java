@@ -177,7 +177,11 @@ public class SocketProperties {
 
     private ObjectName oname = null;
 
-
+    /**
+     * 给socket设置参数 发送buffer大小，超时时间 等......
+     * @param socket
+     * @throws SocketException
+     */
     public void setProperties(Socket socket) throws SocketException{
         if (rxBufSize != null)
             socket.setReceiveBufferSize(rxBufSize.intValue());

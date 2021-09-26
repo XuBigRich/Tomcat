@@ -264,8 +264,8 @@ public class Http2UpgradeHandler extends AbstractStream implements InternalHttpU
         }
     }
 
-
     private void processStreamOnContainerThread(Stream stream) {
+        //生成流处理对象
         StreamProcessor streamProcessor = new StreamProcessor(this, stream, adapter, socketWrapper);
         streamProcessor.setSslSupport(sslSupport);
         processStreamOnContainerThread(streamProcessor, SocketEvent.OPEN_READ);

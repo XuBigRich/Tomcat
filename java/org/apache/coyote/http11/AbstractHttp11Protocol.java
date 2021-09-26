@@ -240,6 +240,8 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
     /**
      * Maximum size of the HTTP message header.
+     * HTTP消息头的最大大小。
+     * 默认是8*1024
      */
     private int maxHttpHeaderSize = 8 * 1024;
 
@@ -1120,6 +1122,7 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
     // ------------------------------------------------------------- Common code
     //创建一个socket处理类，这个处理类就是http协议的处理
+    //在创建Http11Processor 这个处理类时，就把socket协议中的流信息进行了装载
     @Override
     protected Processor createProcessor() {
         Http11Processor processor = new Http11Processor(this, getEndpoint());

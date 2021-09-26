@@ -33,6 +33,8 @@ public class SocketBufferHandler {
     public SocketBufferHandler(int readBufferSize, int writeBufferSize,
             boolean direct) {
         this.direct = direct;
+        //根据配置socket文件对象属性参数，生成对应读和写的ByteBuffer对象
+        //参考配置socket文件对象的属性参数设置ByteBuffer大小
         if (direct) {
             readBuffer = ByteBuffer.allocateDirect(readBufferSize);
             writeBuffer = ByteBuffer.allocateDirect(writeBufferSize);

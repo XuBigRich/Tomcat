@@ -450,10 +450,12 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             socket.configureBlocking(false);
             //获取到建立连接得socket
             Socket sock = socket.socket();
+            //给socket设置属性参数
             socketProperties.setProperties(sock);
             //nioChannels 出栈一个NioChannel
             NioChannel channel = nioChannels.pop();
             if (channel == null) {
+                //从socket设置属性参数的对象中获取到一些信息 生成一个SocketBufferHandler类 对象
                 SocketBufferHandler bufhandler = new SocketBufferHandler(
                         socketProperties.getAppReadBufSize(),
                         socketProperties.getAppWriteBufSize(),
@@ -1400,7 +1402,13 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             return nRead;
         }
 
-
+        /***
+         * 从socket中读取流操作，放入到ByteBuffer中
+         * @param block
+         * @param to  需要放入的ByteBuffer 对象
+         * @return
+         * @throws IOException
+         */
         @Override
         public int read(boolean block, ByteBuffer to) throws IOException {
             int nRead = populateReadBuffer(to);
@@ -1414,11 +1422,13 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                  * at the moment, the preference is for simplicity.
                  */
             }
-
+            //获取ReadBuffer最大可以承受的容量
             // The socket read buffer capacity is socket.appReadBufSize
             int limit = socketBufferHandler.getReadBuffer().capacity();
+            //判断容量是否可以装载的下socket中的数据
             if (to.remaining() >= limit) {
                 to.limit(to.position() + limit);
+                //进行真正的流装载工作
                 nRead = fillReadBuffer(block, to);
                 if (log.isDebugEnabled()) {
                     log.debug("Socket: [" + this + "], Read direct from socket: [" + nRead + "]");
@@ -1459,9 +1469,16 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
             return fillReadBuffer(block, socketBufferHandler.getReadBuffer());
         }
 
-
+        /**
+         * 执行socket流装填工作
+         * @param block
+         * @param to
+         * @return
+         * @throws IOException
+         */
         private int fillReadBuffer(boolean block, ByteBuffer to) throws IOException {
             int nRead;
+            //获取到socket
             NioChannel channel = getSocket();
             if (block) {
                 Selector selector = null;
@@ -1483,6 +1500,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                     }
                 }
             } else {
+                //进行真实的读取 这个方法会调用底层，返回读取的数据量
                 nRead = channel.read(to);
                 if (nRead == -1) {
                     throw new EOFException();

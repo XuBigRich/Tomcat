@@ -803,7 +803,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             }
 
             S socket = wrapper.getSocket();
-
+            //第一次没有获得到处理类，本方法后面会生成创建也给处理类，put到connections容器中
             Processor processor = connections.get(socket);
             if (getLog().isDebugEnabled()) {
                 getLog().debug(sm.getString("abstractConnectionHandler.connectionsGet",
@@ -882,7 +882,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     }
                 }//如果processor依然为null
                 if (processor == null) {
-                    //通过线程池创建一个处理类
+                    //通过线程池创建一个处理类 (一般处理类就是这样生成的)
                     processor = getProtocol().createProcessor();
                     //注册http处理类 到MBean管理器中
                     register(processor);
@@ -895,7 +895,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                         wrapper.getSslSupport(getProtocol().getClientCertProvider()));
 
                 // Associate the processor with the connection
-                //往connections  Map中 put一个key为传入socket 的处理类
+                //往connections  Map中 put一个key为传入socket 的处理类,下次从connections.get就可以取到值了 （上面的代码）
                 connections.put(socket, processor);
 
                 SocketState state = SocketState.CLOSED;
