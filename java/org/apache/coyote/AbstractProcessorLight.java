@@ -36,7 +36,15 @@ public abstract class AbstractProcessorLight implements Processor {
 
     private Set<DispatchType> dispatches = new CopyOnWriteArraySet<>();
 
-    //开始处理socket请求
+    /**
+     *  根据 连接状态开始处理socket请求
+     * @param socketWrapper The connection to process
+     * @param status The status of the connection that triggered this additional
+     *               processing
+     *
+     * @return
+     * @throws IOException
+     */
     @Override
     public SocketState process(SocketWrapperBase<?> socketWrapper, SocketEvent status)
             throws IOException {
@@ -54,6 +62,7 @@ public abstract class AbstractProcessorLight implements Processor {
                 if (!dispatches.hasNext()) {
                     state = checkForPipelinedData(state, socketWrapper);
                 }
+                //如果状态为DISCONNECT 进行这样处理 等
             } else if (status == SocketEvent.DISCONNECT) {
                 // Do nothing here, just wait for it to get recycled
             } else if (isAsync() || isUpgrade() || state == SocketState.ASYNC_END) {

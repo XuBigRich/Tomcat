@@ -792,6 +792,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
         @Override
         //一个很壮观的事件处理类
+        //传入socket 包装类，和出发的事件
         public SocketState process(SocketWrapperBase<S> wrapper, SocketEvent status) {
             if (getLog().isDebugEnabled()) {
                 getLog().debug(sm.getString("abstractConnectionHandler.process",
@@ -804,6 +805,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
             S socket = wrapper.getSocket();
             //第一次没有获得到处理类，本方法后面会生成创建也给处理类，put到connections容器中
+            //Processor 是一个接口 后面会根据 一系列逻辑生成对应的处理类实现，通常是根据getProtocol()方法 获取到协议是哪一个种类，由协议生成处理类（在后面原码有提现）
             Processor processor = connections.get(socket);
             if (getLog().isDebugEnabled()) {
                 getLog().debug(sm.getString("abstractConnectionHandler.connectionsGet",
@@ -883,6 +885,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 }//如果processor依然为null
                 if (processor == null) {
                     //通过线程池创建一个处理类 (一般处理类就是这样生成的)
+                    //获得当前请求是何种协议，根据协议实例生成处理类  如Http11Processor 为AbstractHttp11Protocol协议的处理类
                     processor = getProtocol().createProcessor();
                     //注册http处理类 到MBean管理器中
                     register(processor);
@@ -900,9 +903,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
                 SocketState state = SocketState.CLOSED;
                 do {
-                    //进行对应的socket处理
+                    //拿到处理类后，根据传入的状态 进行对应的socket处理
                     state = processor.process(wrapper, status);
-
+                    //判断处理完之后的状态，像ws 协议请求，可能处理类处理完毕后会变为  SocketState.UPGRADING 状态
                     if (state == SocketState.UPGRADING) {
                         // Get the HTTP upgrade handler
                         UpgradeToken upgradeToken = processor.getUpgradeToken();
