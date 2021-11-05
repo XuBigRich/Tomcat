@@ -905,12 +905,15 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 do {
                     //拿到处理类后，根据传入的状态 进行对应的socket处理
                     state = processor.process(wrapper, status);
-                    //判断处理完之后的状态，像ws 协议请求，可能处理类处理完毕后会变为  SocketState.UPGRADING 状态
+                    //判断处理完之后的状态，如：ws 协议请求，可能处理类处理完毕后会变为  SocketState.UPGRADING 状态
                     if (state == SocketState.UPGRADING) {
                         // Get the HTTP upgrade handler
+                        //获取http 升级 的处理者
                         UpgradeToken upgradeToken = processor.getUpgradeToken();
                         // Retrieve leftover input
+                        //在升级过程中获得的额外输入流
                         ByteBuffer leftOverInput = processor.getLeftoverInput();
+                        //进行判断，判断当前http是否已经存在  http的升级处理者
                         if (upgradeToken == null) {
                             // Assume direct HTTP/2 connection
                             UpgradeProtocol upgradeProtocol = getProtocol().getUpgradeProtocol("h2c");
@@ -929,6 +932,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                                 return SocketState.CLOSED;
                             }
                         } else {
+                            //获取 HTTP升级过程与新协议之间实现类
                             HttpUpgradeHandler httpUpgradeHandler = upgradeToken.getHttpUpgradeHandler();
                             // Release the Http11 processor to be re-used
                             release(processor);
