@@ -44,10 +44,12 @@ public abstract class PojoEndpointBase extends Endpoint {
 
     private Object pojo;
     private Map<String,String> pathParameters;
+    //在其子类中实现
     private PojoMethodMapping methodMapping;
 
 
     protected final void doOnOpen(Session session, EndpointConfig config) {
+        //获取到子类设置好的 要执行的真实的 onOpen方法
         PojoMethodMapping methodMapping = getMethodMapping();
         Object pojo = getPojo();
         Map<String,String> pathParameters = getPathParameters();
@@ -62,6 +64,7 @@ public abstract class PojoEndpointBase extends Endpoint {
 
         if (methodMapping.getOnOpen() != null) {
             try {
+                //二话不说 开始执行反射 ，运行 实现准备好的 onOpen方法，并且，传入参数
                 methodMapping.getOnOpen().invoke(pojo,
                         methodMapping.getOnOpenArgs(
                                 pathParameters, session, config));

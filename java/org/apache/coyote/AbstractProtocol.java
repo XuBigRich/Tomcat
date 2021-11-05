@@ -904,6 +904,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 SocketState state = SocketState.CLOSED;
                 do {
                     //拿到处理类后，根据传入的状态 进行对应的socket处理
+                    // 注意 如果是 ws协议 ，会先由http协议升级为ws协议
+                    // 那么 返回状态 会是 UPGRADING，
+                    // 而且在处理过程中，他们会将serverEndpointConfig  配置信息，也在个方法中 通过过滤器，生成好 ，并且赋值给 WsHttpUpgradeHandler
                     state = processor.process(wrapper, status);
                     //判断处理完之后的状态，如：ws 协议请求，可能处理类处理完毕后会变为  SocketState.UPGRADING 状态
                     if (state == SocketState.UPGRADING) {
@@ -932,7 +935,8 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                                 return SocketState.CLOSED;
                             }
                         } else {
-                            //获取 HTTP升级过程与新协议之间实现类
+                            //获取 HTTP升级过程与新协议之间实现类,
+                            // 如升级为ws 协议 ，那么 执行upgradeToken.getHttpUpgradeHandler(); 会获得WsHttpUpgradeHandler 类
                             HttpUpgradeHandler httpUpgradeHandler = upgradeToken.getHttpUpgradeHandler();
                             // Release the Http11 processor to be re-used
                             release(processor);
@@ -954,6 +958,9 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                             // handling for the surrounding try/catch will deal with
                             // it.
                             if (upgradeToken.getInstanceManager() == null) {
+                                //httpUpgradeHandler 初始化 请求，并去处理 实际的 请求
+                                //通常情况下 ，他在init 时 ，就已经将 websocket 所注解onOpen 的方法执行完毕了
+                                //请查看以 WsHttpUpgradeHandler实现类的举例 （http升级为ws 协议）
                                 httpUpgradeHandler.init((WebConnection) processor);
                             } else {
                                 ClassLoader oldCL = upgradeToken.getContextBind().bind(false, null);

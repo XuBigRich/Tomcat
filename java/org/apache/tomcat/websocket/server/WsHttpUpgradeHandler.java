@@ -99,6 +99,7 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
 
     @Override
     public void init(WebConnection connection) {
+        //先查看ep是否为null
         if (ep == null) {
             throw new IllegalStateException(
                     sm.getString("wsHttpUpgradeHandler.noPreInit"));
@@ -130,6 +131,7 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
             // WsFrame adds the necessary final transformations. Copy the
             // completed transformation chain to the remote end point.
             wsRemoteEndpointServer.setTransformation(wsFrame.getTransformation());
+            //这个地方会真正执行到 你所写的ws 的onOpen方法，并且 会携带serverEndpointConfig ，可以重写serverEndpointConfig 中的Configurator 实现类 让websocket携带 cookie
             ep.onOpen(wsSession, serverEndpointConfig);
             webSocketContainer.registerSession(serverEndpointConfig.getPath(), wsSession);
         } catch (DeploymentException e) {

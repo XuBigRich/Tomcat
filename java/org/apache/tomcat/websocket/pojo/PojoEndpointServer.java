@@ -33,14 +33,18 @@ public class PojoEndpointServer extends PojoEndpointBase {
 
     private static final StringManager sm =
             StringManager.getManager(PojoEndpointServer.class);
-
+    /**
+     * 以ws 协议举例：
+     * 会进入这个方法，这个方法会一步一步 执行到，我们所写业务的onOpen 方法
+     */
     @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
-
+        //处理配置文件
         ServerEndpointConfig sec = (ServerEndpointConfig) endpointConfig;
-
+        //这里 要区分 方法和对象，如：我要执行某个对象的方法
         Object pojo;
         try {
+            //获取 要真正执行的onOpen方法的对象
             pojo = sec.getConfigurator().getEndpointInstance(
                     sec.getEndpointClass());
         } catch (InstantiationException e) {
@@ -48,6 +52,7 @@ public class PojoEndpointServer extends PojoEndpointBase {
                     "pojoEndpointServer.getPojoInstanceFail",
                     sec.getEndpointClass().getName()), e);
         }
+        //设置 要执行 onOpen的对象
         setPojo(pojo);
 
         @SuppressWarnings("unchecked")
@@ -55,12 +60,13 @@ public class PojoEndpointServer extends PojoEndpointBase {
                 (Map<String, String>) sec.getUserProperties().get(
                         Constants.POJO_PATH_PARAM_KEY);
         setPathParameters(pathParameters);
-
+        //获取 要真正执行的onOpen方法
         PojoMethodMapping methodMapping =
                 (PojoMethodMapping) sec.getUserProperties().get(
                         Constants.POJO_METHOD_MAPPING_KEY);
+        //设置要真正执行的方法
         setMethodMapping(methodMapping);
-
+        //这个方法里面 ，会执行反射，让真正的onOpen方法执行
         doOnOpen(session, endpointConfig);
     }
 }
