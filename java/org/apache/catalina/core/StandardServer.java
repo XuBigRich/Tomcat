@@ -754,17 +754,19 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
      *
      * @exception LifecycleException if this component detects a fatal error
      *  that prevents this component from being used
+     *  启动
      */
     @Override
     protected void startInternal() throws LifecycleException {
 
         fireLifecycleEvent(CONFIGURE_START_EVENT, null);
         setState(LifecycleState.STARTING);
-
+        //这是一个启动链入口，当他一执行，后面很多继承自LifecycleBase的类都将 启动
         globalNamingResources.start();
-
+        System.out.println("LifecycleBase 链启动完成");
         // Start our defined Services
         synchronized (servicesLock) {
+            //遍历services 让每一个service执行启动命令
             for (int i = 0; i < services.length; i++) {
                 services[i].start();
             }

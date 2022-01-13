@@ -86,6 +86,8 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
 
     /**
      * Server socket "pointer".
+     *
+     * 用于socket 连接的 ServerSocket 对象
      */
     private volatile ServerSocketChannel serverSock = null;
 
@@ -292,6 +294,10 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
     /**
      * Start the NIO endpoint, creating acceptor, poller threads.
      * 由父类调用子类的io方法
+     * //TODO 建立io连接与io 处理 关键类
+     * 这个方法是一个关键方法：
+     *
+     *
      */
     @Override
     public void startInternal() throws Exception {
@@ -572,6 +578,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                         //setSocketOptions会将接收到的socket赋值给一个多路复用器
                         //一切顺利的话会返回true ，如果失败会返回false
                         //setSocketOptions 方法会将socket 放入events队列中去
+                        //Poller会读取监听这个队列中的socket
                         if (!setSocketOptions(socket)) {
                             closeSocket(socket);
                         }
@@ -800,7 +807,6 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                 processSocket(ka, SocketEvent.STOP, false);
             }
         }
-
         /**
          * Processes events in the event queue of the Poller.
          * 处理轮询器的事件队列中的事件。
@@ -947,6 +953,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
                             //do a non blocking select
                             keyCount = selector.selectNow();
                         } else {
+                            //判断多路复用器中 是否有了活跃的socket，如果有了 返回 int
                             keyCount = selector.select(selectorTimeout);
                         }
                         //最终将wakeupCounter设置为0 0是>-1的
