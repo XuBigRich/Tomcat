@@ -297,6 +297,11 @@ public class CoyoteAdapter implements Adapter {
 
 
     @Override
+    /**
+     *  适配器处理 业务
+     *  1.封装所有的host, context,wrapper信息，将他们存在在 request.getMappingData() 中
+     */
+
     public void service(org.apache.coyote.Request req, org.apache.coyote.Response res)
             throws Exception {
 
@@ -334,15 +339,29 @@ public class CoyoteAdapter implements Adapter {
         try {
             // Parse and set Catalina and configuration specific
             // request parameters
+            //将报文转换，将host, context,wrapper信息都封装在 request.getMappingData() 中 （关键方法）
             postParseSuccess = postParseRequest(req, request, res, response);
             if (postParseSuccess) {
                 //check valves if we support async
+                //查看值是否支持异步
                 request.setAsyncSupported(
                         connector.getService().getContainer().getPipeline().isAsyncSupported());
                 // Calling the container
+                //执行引擎操作 Pipeline管道链 ，但这个语句 会执行 engine （引擎类） 的invoke方法  进入request处理链
+                // 最终管道链的调用顺序是。Engine->host->context->wrapper->servlet( 调用Wrapper得到servlet，构造filterChain)
+                //** org.apache.catalina.core.StandardEngineValve
+                //org.apache.catalina.valves.ErrorReportValve
+                //** org.apache.catalina.core.StandardHostValve
+                // org.apache.catalina.authenticator.AuthenticatorBase
+                //** org.apache.catalina.core.StandardContextValve
+                //** org.apache.catalina.core.StandardWrapperValve (这个地方会有过滤连)
+                // 最终 过滤链调用 HttpServlet类 执行doGet 与doPost方法
+                //** org.apache.catalina.core.ApplicationFilterChain  （这个过滤链中调用了HttpServlet）
+                //主线
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
             }
+            //检查请求是同步还是异步
             if (request.isAsync()) {
                 async = true;
                 ReadListener readListener = req.getReadListener();
@@ -692,6 +711,8 @@ public class CoyoteAdapter implements Adapter {
 
         while (mapRequired) {
             // This will map the the latest version by default
+            //执行映射器，给request.getMappingData() 赋值  （关键方法） ,最终 request.mappingData 有了报文信息
+            //这个地方知识简单的 报文映射，不是主线
             connector.getService().getMapper().map(serverName, decodedURI,
                     version, request.getMappingData());
 

@@ -45,6 +45,9 @@ import org.apache.tomcat.util.res.StringManager;
  * associated Container is generally an instance of Engine, but this is
  * not required.
  *
+ * 这个类 挺关键的。
+ * 他在startInternal() 方法中 启动了 Connector/Engine 等一系列组件
+ *
  * @author Craig R. McClanahan
  */
 
@@ -95,6 +98,13 @@ public class StandardService extends LifecycleMBeanBase implements Service {
 
     /**
      * Mapper.
+     *
+     * Tomcat请求处理流程: 当一个servlet请求到来的时候, tomcat是通过怎样的机制来定位到servlet请求, 并执行请求 的呢
+     *
+     * 以请求这个 为例  url:  http://localhost:8080/web_demo/order/addorder
+     *
+     * Tomcat 设计了 Mapper(映射)组件 完成 url　和Host、Context、Wrapper等组件容器的映射
+     *
      */
     protected final Mapper mapper = new Mapper();
 
@@ -419,6 +429,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         // Start our defined Container first
         if (engine != null) {
             synchronized (engine) {
+                //启动引擎组件
                 engine.start();
             }
         }
@@ -428,7 +439,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
                 executor.start();
             }
         }
-
+        //启动mapperListener
         mapperListener.start();
 
         // Start our defined Connectors second
@@ -437,6 +448,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
                 try {
                     // If it has already failed, don't try and start it
                     if (connector.getState() != LifecycleState.FAILED) {
+                        //启动connector ，这里会创建 关于
                         connector.start();
                     }
                 } catch (Exception e) {

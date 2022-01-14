@@ -68,7 +68,7 @@
          Define a non-SSL/TLS HTTP/1.1 Connector on port 8080
          这个注解 当被解析时，会在栈顶生成一个  org.apache.catalina.connector.Connector 类，赋值端口号，等其他信息
     -->
-    <Connector port="8081" protocol="HTTP/1.1"
+    <Connector port="8080" protocol="HTTP/1.1"
                connectionTimeout="20000"
                redirectPort="8443" />
     <!-- A "Connector" using the shared thread pool-->

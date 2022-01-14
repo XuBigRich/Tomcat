@@ -686,6 +686,7 @@ public final class Mapper {
      *                    operation
      * @throws IOException if the buffers are too small to hold the results of
      *                     the mapping.
+     *                   执行真正的赋值
      */
     public void map(MessageBytes host, MessageBytes uri, String version,
                     MappingData mappingData) throws IOException {
@@ -728,6 +729,7 @@ public final class Mapper {
     /**
      * Map the specified URI.
      * @throws IOException
+     * 执行真正的赋值
      */
     @SuppressWarnings("deprecation") // contextPath
     private final void internalMap(CharChunk host, CharChunk uri,
@@ -819,7 +821,7 @@ public final class Mapper {
         if (context == null) {
             return;
         }
-
+        //给mappingData.context赋值
         mappingData.contextPath.setString(context.name);
 
         ContextVersion contextVersion = null;
@@ -840,6 +842,7 @@ public final class Mapper {
             // The versions array is known to contain at least one element
             contextVersion = contextVersions[versionCount - 1];
         }
+        //给mappingData.wrapper赋值
         mappingData.context = contextVersion.object;
         mappingData.contextSlashCount = contextVersion.slashCount;
 

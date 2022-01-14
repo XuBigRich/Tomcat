@@ -71,6 +71,7 @@ final class StandardEngineValve extends ValveBase {
         throws IOException, ServletException {
 
         // Select the Host to be used for this Request
+        //获取host 就是mapping中的host
         Host host = request.getHost();
         if (host == null) {
             response.sendError
@@ -84,6 +85,8 @@ final class StandardEngineValve extends ValveBase {
         }
 
         // Ask this Host to process this request
+        //处理完host 在继续处理下面的 信息
+        //ErrorReportValve
         host.getPipeline().getFirst().invoke(request, response);
 
     }

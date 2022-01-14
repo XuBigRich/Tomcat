@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.catalina.connector.CoyoteAdapter;
 import org.apache.coyote.AbstractProcessor;
 import org.apache.coyote.ActionCode;
 import org.apache.coyote.ErrorState;
@@ -616,7 +617,9 @@ public class Http11Processor extends AbstractProcessor {
             if (getErrorState().isIoAllowed()) {
                 try {
                     rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-                    //这个地方会进行request传输给service层 然后返回生成response
+                    //这个地方会将request 和 response 传输给适配器 ，由适配器进行业务处理 （较为关键 ，这里面会解析报文，进行资源映射的处理）
+                    //org.apache.catalina.connector.CoyoteAdapter 类 去处理
+                    // 进行request传输给Controller层 然后将 处理信息赋值给response
                     getAdapter().service(request, response);
                     // Handle when the response was committed before a serious
                     // error occurred.  Throwing a ServletException should both

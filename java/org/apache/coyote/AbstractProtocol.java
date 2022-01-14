@@ -35,6 +35,7 @@ import javax.management.ObjectName;
 import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.WebConnection;
 
+import org.apache.catalina.connector.CoyoteAdapter;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.InstanceManager;
 import org.apache.tomcat.util.ExceptionUtils;
@@ -667,6 +668,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
 
 
     @Override
+    //可能由 http11NioProtocol （本类的子类实现） 调用本方法
     public void start() throws Exception {
         if (getLog().isInfoEnabled()) {
             getLog().info(sm.getString("abstractProtocolHandler.start", getName()));
@@ -806,6 +808,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             S socket = wrapper.getSocket();
             //第一次没有获得到处理类，本方法后面会生成创建也给处理类，put到connections容器中
             //Processor 是一个接口 后面会根据 一系列逻辑生成对应的处理类实现，通常是根据getProtocol()方法 获取到协议是哪一个种类，由协议生成处理类（在后面原码有提现）
+            //通常是Http11Processor
             Processor processor = connections.get(socket);
             if (getLog().isDebugEnabled()) {
                 getLog().debug(sm.getString("abstractConnectionHandler.connectionsGet",
