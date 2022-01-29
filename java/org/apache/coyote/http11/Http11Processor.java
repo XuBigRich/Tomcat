@@ -64,6 +64,9 @@ import org.apache.tomcat.util.net.SendfileState;
 import org.apache.tomcat.util.net.SocketWrapperBase;
 import org.apache.tomcat.util.res.StringManager;
 
+/**
+ * 这个类是处理http请求的关键类
+ */
 public class Http11Processor extends AbstractProcessor {
 
     private static final Log log = LogFactory.getLog(Http11Processor.class);
@@ -616,7 +619,8 @@ public class Http11Processor extends AbstractProcessor {
             if (getErrorState().isIoAllowed()) {
                 try {
                     rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
-                    //这个地方会进行request传输给service层 然后返回生成response
+                    //这个地方会进行request传输给 Controller层 ，然后 对传入的 response 进行 处理赋值
+                    //这个地方的request 是 使用的的coyote.Request    ，真正传入Controller层的是servletRequest (单独启动的处理线程调用)
                     getAdapter().service(request, response);
                     // Handle when the response was committed before a serious
                     // error occurred.  Throwing a ServletException should both

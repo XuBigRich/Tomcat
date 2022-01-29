@@ -662,6 +662,7 @@ public abstract class AbstractAccessLogValve extends ValveBase implements Access
     // --------------------------------------------------------- Public Methods
 
     /**
+     * 在管道链中 被调用的方方法
      * Log a message summarizing the specified request and response, according
      * to the format specified by the <code>pattern</code> property.
      *

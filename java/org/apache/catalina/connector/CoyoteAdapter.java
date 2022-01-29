@@ -73,13 +73,13 @@ public class CoyoteAdapter implements Adapter {
             System.getProperty("java.runtime.version") + ")";
 
     private static final EnumSet<SessionTrackingMode> SSL_ONLY =
-        EnumSet.of(SessionTrackingMode.SSL);
+            EnumSet.of(SessionTrackingMode.SSL);
 
     public static final int ADAPTER_NOTES = 1;
 
 
     protected static final boolean ALLOW_BACKSLASH =
-        Boolean.parseBoolean(System.getProperty("org.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH", "false"));
+            Boolean.parseBoolean(System.getProperty("org.apache.catalina.connector.CoyoteAdapter.ALLOW_BACKSLASH", "false"));
 
 
     private static final ThreadLocal<String> THREAD_NAME =
@@ -90,7 +90,7 @@ public class CoyoteAdapter implements Adapter {
                     return Thread.currentThread().getName();
                 }
 
-    };
+            };
 
     // ----------------------------------------------------------- Constructors
 
@@ -127,7 +127,7 @@ public class CoyoteAdapter implements Adapter {
 
     @Override
     public boolean asyncDispatch(org.apache.coyote.Request req, org.apache.coyote.Response res,
-            SocketEvent status) throws Exception {
+                                 SocketEvent status) throws Exception {
 
         Request request = (Request) req.getNote(ADAPTER_NOTES);
         Response response = (Response) res.getNote(ADAPTER_NOTES);
@@ -149,16 +149,16 @@ public class CoyoteAdapter implements Adapter {
                 response.setSuspended(false);
             }
 
-            if (status==SocketEvent.TIMEOUT) {
+            if (status == SocketEvent.TIMEOUT) {
                 if (!asyncConImpl.timeout()) {
                     asyncConImpl.setErrorState(null, false);
                 }
-            } else if (status==SocketEvent.ERROR) {
+            } else if (status == SocketEvent.ERROR) {
                 // An I/O error occurred on a non-container thread which means
                 // that the socket needs to be closed so set success to false to
                 // trigger a close
                 success = false;
-                Throwable t = (Throwable)req.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
+                Throwable t = (Throwable) req.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
                 req.getAttributes().remove(RequestDispatcher.ERROR_EXCEPTION);
                 ClassLoader oldCL = null;
                 try {
@@ -227,11 +227,13 @@ public class CoyoteAdapter implements Adapter {
             // if the application doesn't define one)?
             if (!request.isAsyncDispatching() && request.isAsync() &&
                     response.isErrorReportRequired()) {
+                //连接器调用容器中的 管道链，进行链式处理
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
             }
 
             if (request.isAsyncDispatching()) {
+                //连接器调用容器中的 管道链，进行链式处理
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
                 Throwable t = (Throwable) request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
@@ -254,7 +256,7 @@ public class CoyoteAdapter implements Adapter {
                     // Connection will be forcibly closed which will prevent
                     // completion happening at the usual point. Need to trigger
                     // call to onComplete() here.
-                    res.action(ActionCode.ASYNC_POST_PROCESS,  null);
+                    res.action(ActionCode.ASYNC_POST_PROCESS, null);
                 }
                 success = false;
             }
@@ -299,7 +301,7 @@ public class CoyoteAdapter implements Adapter {
     @Override
     public void service(org.apache.coyote.Request req, org.apache.coyote.Response res)
             throws Exception {
-
+        //从coyote.Request 中获取note  得到一个  connector 的Request
         Request request = (Request) req.getNote(ADAPTER_NOTES);
         Response response = (Response) res.getNote(ADAPTER_NOTES);
 
@@ -334,25 +336,38 @@ public class CoyoteAdapter implements Adapter {
         try {
             // Parse and set Catalina and configuration specific
             // request parameters
+            //对post请求进行转换
             postParseSuccess = postParseRequest(req, request, res, response);
             if (postParseSuccess) {
                 //check valves if we support async
+                //给请求设置 是否支持异步处理请求
                 request.setAsyncSupported(
+                        //连接器调用容器中的 管道链 ，这里表示 查看 Pipeline是否支持异步
                         connector.getService().getContainer().getPipeline().isAsyncSupported());
                 // Calling the container
+                //调用容器方法，拿到管道链中第一个 Valve，Valve是管道链中所存的一个一个链式对象（Valve接口实现对象）
+                // 每个Value 都有一个next方法，和一个invoke方法。
+                // 当执行invoke方法 结束时，约定俗称的，会invoke方法 末尾添加 getNext().invoke(request, response);这样就可以确保每一个Value被调用
+                //因此容器只需要调用 存储在管道链中第一个头Valve就可以调用一整套Value了
                 connector.getService().getContainer().getPipeline().getFirst().invoke(
                         request, response);
             }
+            //判断请求是否是异步的 （servlet 3.1关键代码）
             if (request.isAsync()) {
                 async = true;
+                //如果是异步的获取读取监听器
                 ReadListener readListener = req.getReadListener();
                 if (readListener != null && request.isFinished()) {
                     // Possible the all data may have been read during service()
                     // method so this needs to be checked here
+                    //类加载器
                     ClassLoader oldCL = null;
                     try {
+                        //获取绑定的类加载器
                         oldCL = request.getContext().bind(false, null);
+                        //读io的事件设置为读取完毕 由false 变为true
                         if (req.sendAllDataReadEvent()) {
+                            // 当读取完所有传入的数据时调用这个方法 （socket流传输已经结束）
                             req.getReadListener().onAllDataRead();
                         }
                     } finally {
@@ -384,7 +399,7 @@ public class CoyoteAdapter implements Adapter {
                 // Connection will be forcibly closed which will prevent
                 // completion happening at the usual point. Need to trigger
                 // call to onComplete() here.
-                res.action(ActionCode.ASYNC_POST_PROCESS,  null);
+                res.action(ActionCode.ASYNC_POST_PROCESS, null);
                 async = false;
             }
 
@@ -449,7 +464,7 @@ public class CoyoteAdapter implements Adapter {
 
     @Override
     public void log(org.apache.coyote.Request req,
-            org.apache.coyote.Response res, long time) {
+                    org.apache.coyote.Response res, long time) {
 
         Request request = (Request) req.getNote(ADAPTER_NOTES);
         Response response = (Response) res.getNote(ADAPTER_NOTES);
@@ -487,6 +502,7 @@ public class CoyoteAdapter implements Adapter {
                 host.logAccess(request, response, time, true);
             }
             if (!logged) {
+                //连接器调用容器
                 connector.getService().getContainer().logAccess(request, response, time, true);
             }
         } catch (Throwable t) {
@@ -506,7 +522,7 @@ public class CoyoteAdapter implements Adapter {
 
     @Override
     public void checkRecycled(org.apache.coyote.Request req,
-            org.apache.coyote.Response res) {
+                              org.apache.coyote.Response res) {
         Request request = (Request) req.getNote(ADAPTER_NOTES);
         Response response = (Response) res.getNote(ADAPTER_NOTES);
         String messageKey = null;
@@ -555,17 +571,15 @@ public class CoyoteAdapter implements Adapter {
      * @param request  The catalina request object
      * @param res      The coyote response object
      * @param response The catalina response object
-     *
      * @return <code>true</code> if the request should be passed on to the start
-     *         of the container pipeline, otherwise <code>false</code>
-     *
-     * @throws IOException If there is insufficient space in a buffer while
-     *                     processing headers
+     * of the container pipeline, otherwise <code>false</code>
+     * @throws IOException      If there is insufficient space in a buffer while
+     *                          processing headers
      * @throws ServletException If the supported methods of the target servlet
      *                          cannot be determined
      */
     protected boolean postParseRequest(org.apache.coyote.Request req, Request request,
-            org.apache.coyote.Response res, Response response) throws IOException, ServletException {
+                                       org.apache.coyote.Response res, Response response) throws IOException, ServletException {
 
         // If the processor has set the scheme (AJP does this, HTTP does this if
         // SSL is enabled) use this to set the secure flag as well. If the
@@ -597,10 +611,11 @@ public class CoyoteAdapter implements Adapter {
         if (proxyName != null) {
             req.serverName().setString(proxyName);
         }
-
+        //获取http报文中的请求路径
         MessageBytes undecodedURI = req.requestURI();
 
         // Check for ping OPTIONS * request
+        //检查请求路径 发送是否等于*
         if (undecodedURI.equals("*")) {
             if (req.method().equalsIgnoreCase("OPTIONS")) {
                 StringBuilder allow = new StringBuilder();
@@ -611,15 +626,16 @@ public class CoyoteAdapter implements Adapter {
                 }
                 res.setHeader("Allow", allow.toString());
                 // Access log entry as processing won't reach AccessLogValve
+                //连接器调用容器 做业务逻辑处理
                 connector.getService().getContainer().logAccess(request, response, 0, true);
                 return false;
             } else {
                 response.sendError(400, "Invalid URI");
             }
         }
-
+        //再次获取http 报文中编码后的请求路径
         MessageBytes decodedURI = req.decodedURI();
-
+        //检查请求路径的类型，在
         if (undecodedURI.getType() == MessageBytes.T_BYTES) {
             // Copy the raw URI to the decodedURI
             decodedURI.duplicate(undecodedURI);
@@ -627,6 +643,7 @@ public class CoyoteAdapter implements Adapter {
             // Parse the path parameters. This will:
             //   - strip out the path parameters
             //   - convert the decodedURI to bytes
+            //转换路径伤的参数
             parsePathParameters(req, request);
 
             // URI decoding
@@ -692,6 +709,7 @@ public class CoyoteAdapter implements Adapter {
 
         while (mapRequired) {
             // This will map the the latest version by default
+            //调用服务层的Mapper方法，去对uri做映射处理
             connector.getService().getMapper().map(serverName, decodedURI,
                     version, request.getMappingData());
 
@@ -804,8 +822,8 @@ public class CoyoteAdapter implements Adapter {
                 // shouldn't matter
                 redirectPath = redirectPath + ";" +
                         SessionConfig.getSessionUriParamName(
-                            request.getContext()) +
-                    "=" + request.getRequestedSessionId();
+                                request.getContext()) +
+                        "=" + request.getRequestedSessionId();
             }
             if (query != null) {
                 // This is not optimal, but as this is not very common, it
@@ -825,7 +843,7 @@ public class CoyoteAdapter implements Adapter {
             if (wrapper != null) {
                 String[] methods = wrapper.getServletMethods();
                 if (methods != null) {
-                    for (int i=0; i < methods.length; i++) {
+                    for (int i = 0; i < methods.length; i++) {
                         if ("TRACE".equals(methods[i])) {
                             continue;
                         }
@@ -894,11 +912,11 @@ public class CoyoteAdapter implements Adapter {
      * interested in the session ID that will be in this form. Other parameters
      * can safely be ignored.
      *
-     * @param req The Coyote request object
+     * @param req     The Coyote request object
      * @param request The Servlet request object
      */
     protected void parsePathParameters(org.apache.coyote.Request req,
-            Request request) {
+                                       Request request) {
 
         // Process in bytes (this is default format so this is normally a NO-OP
         req.decodedURI().toBytes();
@@ -931,27 +949,27 @@ public class CoyoteAdapter implements Adapter {
             int pathParamStart = semicolon + 1;
             int pathParamEnd = ByteChunk.findBytes(uriBC.getBuffer(),
                     start + pathParamStart, end,
-                    new byte[] {';', '/'});
+                    new byte[]{';', '/'});
 
             String pv = null;
 
             if (pathParamEnd >= 0) {
                 if (charset != null) {
                     pv = new String(uriBC.getBuffer(), start + pathParamStart,
-                                pathParamEnd - pathParamStart, charset);
+                            pathParamEnd - pathParamStart, charset);
                 }
                 // Extract path param from decoded request URI
                 byte[] buf = uriBC.getBuffer();
                 for (int i = 0; i < end - start - pathParamEnd; i++) {
                     buf[start + semicolon + i]
-                        = buf[start + i + pathParamEnd];
+                            = buf[start + i + pathParamEnd];
                 }
                 uriBC.setBytes(buf, start,
                         end - start - pathParamEnd + semicolon);
             } else {
                 if (charset != null) {
                     pv = new String(uriBC.getBuffer(), start + pathParamStart,
-                                (end - start) - pathParamStart, charset);
+                            (end - start) - pathParamStart, charset);
                 }
                 uriBC.setEnd(start + semicolon);
             }
@@ -996,7 +1014,7 @@ public class CoyoteAdapter implements Adapter {
         if (request.getRequestedSessionId() == null &&
                 SSL_ONLY.equals(request.getServletContext()
                         .getEffectiveSessionTrackingModes()) &&
-                        request.connector.secure) {
+                request.connector.secure) {
             String sessionId = (String) request.getAttribute(SSLSupport.SESSION_ID_KEY);
             if (sessionId != null) {
                 request.setRequestedSessionId(sessionId);
@@ -1041,19 +1059,19 @@ public class CoyoteAdapter implements Adapter {
                     // Accept only the first session id cookie
                     convertMB(scookie.getValue());
                     request.setRequestedSessionId
-                        (scookie.getValue().toString());
+                            (scookie.getValue().toString());
                     request.setRequestedSessionCookie(true);
                     request.setRequestedSessionURL(false);
                     if (log.isDebugEnabled()) {
                         log.debug(" Requested cookie session id is " +
-                            request.getRequestedSessionId());
+                                request.getRequestedSessionId());
                     }
                 } else {
                     if (!request.isRequestedSessionIdValid()) {
                         // Replace the session id until one is valid
                         convertMB(scookie.getValue());
                         request.setRequestedSessionId
-                            (scookie.getValue().toString());
+                                (scookie.getValue().toString());
                     }
                 }
             }
@@ -1065,7 +1083,7 @@ public class CoyoteAdapter implements Adapter {
     /**
      * Character conversion of the URI.
      *
-     * @param uri MessageBytes object containing the URI
+     * @param uri     MessageBytes object containing the URI
      * @param request The Servlet request object
      * @throws IOException if a IO exception occurs sending an error to the client
      */
@@ -1130,10 +1148,9 @@ public class CoyoteAdapter implements Adapter {
      * This method normalizes "\", "//", "/./" and "/../".
      *
      * @param uriMB URI to be normalized
-     *
      * @return <code>false</code> if normalizing this URI would require going
-     *         above the root, or if the URI contains a null byte, otherwise
-     *         <code>true</code>
+     * above the root, or if the URI contains a null byte, otherwise
+     * <code>true</code>
      */
     public static boolean normalize(MessageBytes uriMB) {
 
@@ -1185,7 +1202,7 @@ public class CoyoteAdapter implements Adapter {
         // as the next character is a non-significant WS.
         if (((end - start) >= 2) && (b[end - 1] == (byte) '.')) {
             if ((b[end - 2] == (byte) '/')
-                || ((b[end - 2] == (byte) '.')
+                    || ((b[end - 2] == (byte) '.')
                     && (b[end - 3] == (byte) '/'))) {
                 b[end] = (byte) '/';
                 end++;
@@ -1203,7 +1220,7 @@ public class CoyoteAdapter implements Adapter {
                 break;
             }
             copyBytes(b, start + index, start + index + 2,
-                      end - start - index - 2);
+                    end - start - index - 2);
             end = end - 2;
             uriBC.setEnd(end);
         }
@@ -1221,13 +1238,13 @@ public class CoyoteAdapter implements Adapter {
                 return false;
             }
             int index2 = -1;
-            for (pos = start + index - 1; (pos >= 0) && (index2 < 0); pos --) {
+            for (pos = start + index - 1; (pos >= 0) && (index2 < 0); pos--) {
                 if (b[pos] == (byte) '/') {
                     index2 = pos;
                 }
             }
             copyBytes(b, start + index2, start + index + 3,
-                      end - start - index - 3);
+                    end - start - index - 3);
             end = end + index2 - index - 3;
             uriBC.setEnd(end);
             index = index2;
@@ -1243,10 +1260,9 @@ public class CoyoteAdapter implements Adapter {
      * method checks for "\", 0, "//", "/./" and "/../".
      *
      * @param uriMB URI to be checked (should be chars)
-     *
      * @return <code>false</code> if sequences that are supposed to be
-     *         normalized are still present in the URI, otherwise
-     *         <code>true</code>
+     * normalized are still present in the URI, otherwise
+     * <code>true</code>
      */
     public static boolean checkNormalize(MessageBytes uriMB) {
 
@@ -1307,10 +1323,10 @@ public class CoyoteAdapter implements Adapter {
      * Copy an array of bytes to a different position. Used during
      * normalization.
      *
-     * @param b The bytes that should be copied
+     * @param b    The bytes that should be copied
      * @param dest Destination offset
-     * @param src Source offset
-     * @param len Length
+     * @param src  Source offset
+     * @param len  Length
      */
     protected static void copyBytes(byte[] b, int dest, int src, int len) {
         System.arraycopy(b, src, b, dest, len);

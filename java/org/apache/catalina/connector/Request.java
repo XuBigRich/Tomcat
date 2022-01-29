@@ -120,6 +120,8 @@ import org.ietf.jgss.GSSException;
 /**
  * Wrapper object for the Coyote request.
  *
+ * http 的request 请求 里面包含对 http 报文的解析 处理
+ *
  * @author Remy Maucherat
  * @author Craig R. McClanahan
  */
@@ -142,6 +144,7 @@ public class Request implements org.apache.catalina.servlet4preview.http.HttpSer
 
     /**
      * Coyote request.
+     * 这个request里面会有关键信息，里面包含着 被解析后的所有http报文
      */
     protected org.apache.coyote.Request coyoteRequest;
 
@@ -3192,6 +3195,10 @@ public class Request implements org.apache.catalina.servlet4preview.http.HttpSer
 
     /**
      * Parse request parameters.
+     * 转换http请求
+     *
+     * multipart/form-data
+     * application/x-www-form-urlencoded
      */
     protected void parseParameters() {
 
