@@ -171,6 +171,7 @@ public class StandardPipeline extends LifecycleBase
         if (current == null) {
             current = basic;
         }
+        //current有点类似于链表，不断地寻找他的下面是否有元素，然后执行这些元素的 start (启动) 命令
         while (current != null) {
             if (current instanceof Lifecycle)
                 ((Lifecycle) current).start();

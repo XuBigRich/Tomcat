@@ -621,6 +621,9 @@ public class Http11Processor extends AbstractProcessor {
                     rp.setStage(org.apache.coyote.Constants.STAGE_SERVICE);
                     //这个地方会进行request传输给 Controller层 ，然后 对传入的 response 进行 处理赋值
                     //这个地方的request 是 使用的的coyote.Request    ，真正传入Controller层的是servletRequest (单独启动的处理线程调用)
+                    //这个地方会将request 和 response 传输给适配器 ，由适配器进行业务处理 （较为关键 ，这里面会解析报文，进行资源映射的处理）
+                    //org.apache.catalina.connector.CoyoteAdapter 类 去处理
+                    // 进行request传输给Controller层 然后将 处理信息赋值给response
                     getAdapter().service(request, response);
                     // Handle when the response was committed before a serious
                     // error occurred.  Throwing a ServletException should both

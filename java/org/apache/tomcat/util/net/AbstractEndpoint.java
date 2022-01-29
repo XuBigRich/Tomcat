@@ -1338,10 +1338,13 @@ public abstract class AbstractEndpoint<S> {
             bind();
             bindState = BindState.BOUND_ON_START;
         }
-        //调用子类的io
+        //调用子类的io ，这个方法是关键方法，请查看这个类的子类实现
         startInternal();
     }
 
+    /**
+     * 启动接socket连接的线程（多个）
+     */
     protected final void startAcceptorThreads() {
         //这个值在不设置的状态下默认是1
         int count = getAcceptorThreadCount();
@@ -1356,6 +1359,7 @@ public abstract class AbstractEndpoint<S> {
             String threadName = getName() + "-Acceptor-" + i;
             //给线程设置名字
             acceptors[i].setThreadName(threadName);
+            //启动线程  有多个线程监听同一个serverSock
             Thread t = new Thread(acceptors[i], threadName);
             t.setPriority(getAcceptorThreadPriority());
             t.setDaemon(getDaemon());
