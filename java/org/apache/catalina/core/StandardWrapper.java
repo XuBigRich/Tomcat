@@ -85,7 +85,7 @@ public class StandardWrapper extends ContainerBase
      * Create a new StandardWrapper component with the default basic Valve.
      */
     public StandardWrapper() {
-
+        //过滤连拥有者 被初始化
         super();
         swValve=new StandardWrapperValve();
         pipeline.setBasic(swValve);

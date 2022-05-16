@@ -169,20 +169,25 @@ final class StandardWrapperValve
         request.setAttribute(Globals.DISPATCHER_REQUEST_PATH_ATTR,
                 requestPathMB);
         // Create the filter chain for this request
+        //给请求添加过滤链
         ApplicationFilterChain filterChain =
                 ApplicationFilterFactory.createFilterChain(request, wrapper, servlet);
 
         // Call the filter chain for this request
         // NOTE: This also calls the servlet's service() method
         try {
+            //如果存在过滤器链
             if ((servlet != null) && (filterChain != null)) {
                 // Swallow output if needed
+                //需要吞咽输出 (不知道是什么东西)
                 if (context.getSwallowOutput()) {
                     try {
                         SystemLogHandler.startCapture();
+                        // Servlet3.0的新特性
                         if (request.isAsyncDispatching()) {
                             request.getAsyncContextInternal().doInternalDispatch();
                         } else {
+                            //执行过滤器
                             filterChain.doFilter(request.getRequest(),
                                     response.getResponse());
                         }

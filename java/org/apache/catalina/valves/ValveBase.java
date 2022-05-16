@@ -22,6 +22,7 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
 import org.apache.catalina.Pipeline;
 import org.apache.catalina.Valve;
+import org.apache.catalina.core.ApplicationFilterFactory;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.res.StringManager;
@@ -98,7 +99,6 @@ public abstract class ValveBase extends LifecycleMBeanBase implements Contained,
     public void setContainer(Container container) {
         this.container = container;
     }
-
 
     @Override
     public boolean isAsyncSupported() {

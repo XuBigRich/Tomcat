@@ -37,6 +37,8 @@ import org.apache.tomcat.util.res.StringManager;
  * when processing HTTP requests.
  *
  * @author Craig R. McClanahan
+ * 每个Valve 继承自 ValveBase  而ValveBase 拥有container 属性
+ * 在该StandardContextValve中，他的container是StandardContext 里面存储了 从 context.xml中读取的配置文件 也有过滤器信息
  */
 final class StandardContextValve extends ValveBase {
 
@@ -52,15 +54,14 @@ final class StandardContextValve extends ValveBase {
      * based on the specified request URI.  If no matching Wrapper can
      * be found, return an appropriate HTTP error.
      *
-     * @param request Request to be processed
+     * @param request  Request to be processed
      * @param response Response to be produced
-     *
-     * @exception IOException if an input/output error occurred
-     * @exception ServletException if a servlet error occurred
+     * @throws IOException      if an input/output error occurred
+     * @throws ServletException if a servlet error occurred
      */
     @Override
     public final void invoke(Request request, Response response)
-        throws IOException, ServletException {
+            throws IOException, ServletException {
 
         // Disallow any direct access to resources under WEB-INF or META-INF
         MessageBytes requestPathMB = request.getRequestPathMB();

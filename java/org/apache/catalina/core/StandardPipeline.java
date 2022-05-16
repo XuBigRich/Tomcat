@@ -283,6 +283,7 @@ public class StandardPipeline extends LifecycleBase
         if (valve == null)
             return;
         if (valve instanceof Contained) {
+            //给valve 设置container  类似于 给StandardContextValve 设置 StandardContext  （StandardContext来源于配置文件）
             ((Contained) valve).setContainer(this.container);
         }
         if (getState().isAvailable() && valve instanceof Lifecycle) {
@@ -293,17 +294,21 @@ public class StandardPipeline extends LifecycleBase
                 return;
             }
         }
-
+        //更新pipeline 链表
         // Update the pipeline
         Valve current = first;
+        //若第一次进入，如果首节点不为null 进入循环
         while (current != null) {
+            //获取下一个节点 且下一个节点是 basic (最后一个节点)
             if (current.getNext() == oldBasic) {
+                //设置下一个节点为当前valve
                 current.setNext(valve);
                 break;
             }
+            //如果不是 最后一个 那么获取当前current 的下一个节点，直到找到最后一个节点为止
             current = current.getNext();
         }
-
+        //更新basic为传入的valve
         this.basic = valve;
 
     }

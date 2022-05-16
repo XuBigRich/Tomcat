@@ -28,7 +28,7 @@ import org.apache.tomcat.util.descriptor.web.FilterMap;
 /**
  * Factory for the creation and caching of Filters and creation
  * of Filter Chains.
- *
+ * 创建过滤链 createFilterChain方法
  * @author Greg Murray
  * @author Remy Maucherat
  */
@@ -46,7 +46,7 @@ public final class ApplicationFilterFactory {
      * @param request The servlet request we are processing
      * @param wrapper The wrapper managing the servlet instance
      * @param servlet The servlet instance to be wrapped
-     *
+     * 这个静态方法 一般是由 StandardWrapperValve 这个类调用，在请求时调用
      * @return The configured FilterChain instance or null if none is to be
      *         executed.
      */
@@ -54,11 +54,14 @@ public final class ApplicationFilterFactory {
             Wrapper wrapper, Servlet servlet) {
 
         // If there is no servlet to execute, return null
+        ////如果web.xml中没有配置过滤器，则直接返回
         if (servlet == null)
             return null;
 
         // Create and initialize a filter chain object
+        //;//获取Servlet的名字  一个StandardWrapperValue代表一个具体的Servlet
         ApplicationFilterChain filterChain = null;
+        //创建一个过滤链
         if (request instanceof Request) {
             Request req = (Request) request;
             if (Globals.IS_SECURITY_ENABLED) {
@@ -80,10 +83,13 @@ public final class ApplicationFilterFactory {
         filterChain.setServletSupportsAsync(wrapper.isAsyncSupported());
 
         // Acquire the filter mappings for this Context
+        //拿到 上下文（从配置文件获取）
         StandardContext context = (StandardContext) wrapper.getParent();
+        // 从上下文中获取过滤器
         FilterMap filterMaps[] = context.findFilterMaps();
 
         // If there are no filter mappings, we are done
+        //如果过滤器为null，那么返回一个空的过滤连
         if ((filterMaps == null) || (filterMaps.length == 0))
             return filterChain;
 
@@ -98,20 +104,24 @@ public final class ApplicationFilterFactory {
         }
 
         String servletName = wrapper.getName();
-
+        //遍历过滤链
         // Add the relevant path-mapped filters to this filter chain
         for (int i = 0; i < filterMaps.length; i++) {
+            //这里是过滤器支持的类型，包括 FORWARD、INCLUDE、REQUEST、ASYNC、ERROR
             if (!matchDispatcher(filterMaps[i] ,dispatcher)) {
                 continue;
             }
+            ////这里判断是否和请求路径相匹配，不过当前过滤器不负责过滤这个路径 那么跳出循环
             if (!matchFiltersURL(filterMaps[i], requestPath))
                 continue;
+            //从应用上下文中查找对应的过滤器
             ApplicationFilterConfig filterConfig = (ApplicationFilterConfig)
                 context.findFilterConfig(filterMaps[i].getFilterName());
             if (filterConfig == null) {
                 // FIXME - log configuration problem
                 continue;
             }
+            //将过滤器放入过滤链 ，这个过滤链有可能已经放入了 request请求
             filterChain.addFilter(filterConfig);
         }
 
@@ -157,10 +167,12 @@ public final class ApplicationFilterFactory {
         if (requestPath == null)
             return false;
 
-        // Match on context relative request path
+        // Match on context relative request path、
+        //获取过滤器 需要过滤的路径
         String[] testPaths = filterMap.getURLPatterns();
 
         for (int i = 0; i < testPaths.length; i++) {
+            //匹配请求路径
             if (matchFiltersURL(testPaths[i], requestPath)) {
                 return true;
             }

@@ -3292,6 +3292,7 @@ public class StandardContext extends ContainerBase
      * will have been called, but no properties will have been set.
      */
     @Override
+    //创建过滤连
     public Wrapper createWrapper() {
 
         Wrapper wrapper = null;
@@ -3304,6 +3305,7 @@ public class StandardContext extends ContainerBase
                 return null;
             }
         } else {
+            //创建过滤连拥有者
             wrapper = new StandardWrapper();
         }
 
