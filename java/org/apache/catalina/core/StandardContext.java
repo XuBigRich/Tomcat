@@ -4547,6 +4547,7 @@ public class StandardContext extends ContainerBase
                 try {
                     ApplicationFilterConfig filterConfig =
                             new ApplicationFilterConfig(this, entry.getValue());
+                    //将所有的过滤器放入filterConfigs中
                     filterConfigs.put(name, filterConfig);
                 } catch (Throwable t) {
                     t = ExceptionUtils.unwrapInvocationTargetException(t);

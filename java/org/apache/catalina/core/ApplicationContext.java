@@ -780,7 +780,7 @@ public class ApplicationContext implements ServletContext {
         return addFilter(filterName, filterClass.getName(), null);
     }
 
-
+    //往Context中添加 过滤器 ，Context配置文件中 提供了过滤器路径，在ApplicationContext中 将他放入这个配置文件
     private FilterRegistration.Dynamic addFilter(String filterName,
             String filterClass, Filter filter) throws IllegalStateException {
 
