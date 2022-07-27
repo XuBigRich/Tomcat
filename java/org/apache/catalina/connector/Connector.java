@@ -1004,6 +1004,7 @@ public class Connector extends LifecycleMBeanBase  {
 
         // Initialize adapter
         adapter = new CoyoteAdapter(this);
+        //初始化 Http11NioProtocol
         protocolHandler.setAdapter(adapter);
 
         // Make sure parseBodyMethodsSet has a default

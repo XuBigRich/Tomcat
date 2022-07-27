@@ -311,7 +311,7 @@ public class Catalina {
         digester.addObjectCreate("Server",
                 "org.apache.catalina.core.StandardServer",
                 "className");
-        //给digester添加一个参数sever 表面 当前digester 已经支持 Server类型的 规则解析器
+        //给digester添加一个参数sever 表明 当前digester 已经支持 Server类型的 规则解析器
         //他的执行时机是当地一个规则执行完毕后 产生实例后 ，才开始执行                SetPropertiesRule extends Rule
         digester.addSetProperties("Server");
         //patten 为规则名称，className 与attributename 用于建立SetNext类型的规则实体类 Rule

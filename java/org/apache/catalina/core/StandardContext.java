@@ -382,6 +382,7 @@ public class StandardContext extends ContainerBase
     /**
      * The set of filter definitions for this application, keyed by
      * filter name.
+     * 放置所有的过滤器
      */
     private HashMap<String, FilterDef> filterDefs = new HashMap<>();
 
@@ -4531,6 +4532,7 @@ public class StandardContext extends ContainerBase
      * Configure and initialize the set of filters for this Context.
      * @return <code>true</code> if all filter initialization completed
      * successfully, or <code>false</code> otherwise.
+     * 启动配置过滤器  ***过滤器***
      */
     public boolean filterStart() {
 
@@ -4912,6 +4914,7 @@ public class StandardContext extends ContainerBase
      *
      * @exception LifecycleException if this component detects a fatal error
      *  that prevents this component from being used
+     *  后面启用过滤器
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {

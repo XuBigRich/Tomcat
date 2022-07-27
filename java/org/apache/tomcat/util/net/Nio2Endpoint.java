@@ -181,6 +181,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
             }
 
             initializeConnectionLatch();
+            //启动socket 执行多 线程
             startAcceptorThreads();
         }
     }
@@ -326,6 +327,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
             socketWrapper.setReadTimeout(getConnectionTimeout());
             socketWrapper.setWriteTimeout(getConnectionTimeout());
             // Continue processing on another thread
+            //开始处理socket连接请求 ，这里面会开启一个新的线程
             return processSocket(socketWrapper, SocketEvent.OPEN_READ, true);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -362,7 +364,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
      * it will attempt to start again).
      */
     protected class Acceptor extends AbstractEndpoint.Acceptor {
-
+        //此方法 由多个线程执行，将不断轮询执行
         @Override
         public void run() {
 
@@ -394,6 +396,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
                     try {
                         // Accept the next incoming connection from the server
                         // socket
+                        //这个地方或会阻塞 ，直到由socket建立链接后才释放
                         socket = serverSock.accept().get();
                     } catch (Exception e) {
                         // We didn't get a socket
@@ -414,6 +417,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
                     if (running && !paused) {
                         // setSocketOptions() will hand the socket off to
                         // an appropriate processor if successful
+                        //设置socket 操作，将建立链接的socket 传入 setSocketOptions方法
                         if (!setSocketOptions(socket)) {
                             closeSocket(socket);
                         }

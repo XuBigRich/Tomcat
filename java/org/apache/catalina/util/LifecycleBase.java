@@ -16,6 +16,7 @@
  */
 package org.apache.catalina.util;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -24,18 +25,20 @@ import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.LifecycleState;
+import org.apache.catalina.core.StandardHost;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.ExceptionUtils;
+import org.apache.tomcat.util.net.Nio2Endpoint;
 import org.apache.tomcat.util.res.StringManager;
 
 /**
  * Base implementation of the {@link Lifecycle} interface that implements the
  * state transition rules for {@link Lifecycle#start()} and
+ * LifecycleBase 实现了模版设计模式，和装饰器模式
  * {@link Lifecycle#stop()}
  */
 public abstract class LifecycleBase implements Lifecycle {
-
     private static final Log log = LogFactory.getLog(LifecycleBase.class);
 
     private static final StringManager sm = StringManager.getManager(LifecycleBase.class);
@@ -167,7 +170,6 @@ public abstract class LifecycleBase implements Lifecycle {
         //标识状态 当前Lifecycle 对象的启动标识
         if (LifecycleState.STARTING_PREP.equals(state) || LifecycleState.STARTING.equals(state) ||
                 LifecycleState.STARTED.equals(state)) {
-
             if (log.isDebugEnabled()) {
                 Exception e = new LifecycleException();
                 log.debug(sm.getString("lifecycleBase.alreadyStarted", toString()), e);
@@ -189,7 +191,9 @@ public abstract class LifecycleBase implements Lifecycle {
 
         try {
             setStateInternal(LifecycleState.STARTING_PREP, null, false);
-            //--启动  开始启动
+            //--启动  开始启动   LifecycleBase是一个父类， 他的子类StandardContext 很关键
+            //StandardContext 调用 startInternal然后 方法中的调用 start方法时会启动过滤器 （StandardContext的startInternal方法） **过滤器**
+            //StandardContext 这个类比较关键，在spring中TomcatEmbeddedContext 代替StandardContext 在 tomcat中发挥作用
             startInternal();
             if (state.equals(LifecycleState.FAILED)) {
                 // This is a 'controlled' failure. The component put itself into the
