@@ -308,6 +308,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
             socketProperties.setProperties(socket);
             Nio2Channel channel = nioChannels.pop();
             if (channel == null) {
+                //内部将管理一堆内存对象 读内存 与写内存
                 SocketBufferHandler bufhandler = new SocketBufferHandler(
                         socketProperties.getAppReadBufSize(),
                         socketProperties.getAppWriteBufSize(),
@@ -315,11 +316,18 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
                 if (isSSLEnabled()) {
                     channel = new SecureNio2Channel(bufhandler, this);
                 } else {
+                    //使用内存对象，先创建一个Nio2通道
                     channel = new Nio2Channel(bufhandler);
                 }
             }
+            //将创建的通道包装一下，里面放入通道和 当前endpoint对象，（通道中目前只有内存信息）
             Nio2SocketWrapper socketWrapper = new Nio2SocketWrapper(channel, this);
+            //将新拿到的socket和 包装好的 通道 执行reset
+            //执行reset 会，将声明的内存都规整好最优状态、客户端socket信息、与包装的socketWrapper信息 放入channel对象
+            //********这时候会将 socket 放入 通道 ，此时的通道拥有了 内存与socket全部信息**********
+            //TODO 放入了socket信息 channel现在拥有 ，内存 和 socket
             channel.reset(socket, socketWrapper);
+            //设置超时时间
             socketWrapper.setReadTimeout(getSocketProperties().getSoTimeout());
             socketWrapper.setWriteTimeout(getSocketProperties().getSoTimeout());
             socketWrapper.setKeepAliveLeft(Nio2Endpoint.this.getMaxKeepAliveRequests());
@@ -328,6 +336,10 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
             socketWrapper.setWriteTimeout(getConnectionTimeout());
             // Continue processing on another thread
             //开始处理socket连接请求 ，这里面会开启一个新的线程
+            //交由父类方法处理。socketWrapper 中存在
+            // 当前endpoint 对象 ，与其所拥有的属性、
+            // 和
+            // channel信息，而channel中包含socket信息 与 （ByteBuffer）内存信息
             return processSocket(socketWrapper, SocketEvent.OPEN_READ, true);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
@@ -341,6 +353,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
     @Override
     protected SocketProcessorBase<Nio2Channel> createSocketProcessor(
             SocketWrapperBase<Nio2Channel> socketWrapper, SocketEvent event) {
+        //SocketProcessor 继承自SocketProcessorBase 抽象类， 抽象类实现了 runnable接口。
         return new SocketProcessor(socketWrapper, event);
     }
 
@@ -418,6 +431,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
                         // setSocketOptions() will hand the socket off to
                         // an appropriate processor if successful
                         //设置socket 操作，将建立链接的socket 传入 setSocketOptions方法
+                        //获取到连接的aio 异步socket 然后设置 SocketOptions
                         if (!setSocketOptions(socket)) {
                             closeSocket(socket);
                         }
@@ -1591,7 +1605,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
      * external Executor thread pool.
      */
     protected class SocketProcessor extends SocketProcessorBase<Nio2Channel> {
-
+        //创建一个socketProcessor类，里面存有socketWrapper包装类  这个包装类 前面讲过、存有内存 socket 、 endpoint 对象 ，现在加一个处理事件 （读取、写入等）
         public SocketProcessor(SocketWrapperBase<Nio2Channel> socketWrapper, SocketEvent event) {
             super(socketWrapper, event);
         }
@@ -1603,6 +1617,7 @@ public class Nio2Endpoint extends AbstractJsseEndpoint<Nio2Channel> {
                 int handshake = -1;
 
                 try {
+                    //判断socket是否已经完成握手
                     if (socketWrapper.getSocket().isHandshakeComplete()) {
                         // No TLS handshaking required. Let the handler
                         // process this socket / event combination.

@@ -1798,7 +1798,7 @@ public class NioEndpoint extends AbstractJsseEndpoint<NioChannel> {
      * 这个类父类中存在一个event属性，我们可以根据这个属性来判断 事件类型 是读取 还是写入
      */
     protected class SocketProcessor extends SocketProcessorBase<NioChannel> {
-
+        //创建一个socketProcessor类，里面存有socketWrapper包装类  这个包装类 前面讲过、存有内存 socket 、 endpoint 对象 ，现在加一个处理事件 （读取、写入等）
         public SocketProcessor(SocketWrapperBase<NioChannel> socketWrapper, SocketEvent event) {
             super(socketWrapper, event);
         }

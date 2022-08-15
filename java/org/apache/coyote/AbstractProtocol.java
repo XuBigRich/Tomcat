@@ -804,7 +804,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 // Nothing to do. Socket has been closed.
                 return SocketState.CLOSED;
             }
-
+            //从包装类中取出socket
             S socket = wrapper.getSocket();
             //第一次没有获得到处理类，本方法后面会生成创建也给处理类，put到connections容器中
             //Processor 是一个接口 后面会根据 一系列逻辑生成对应的处理类实现，通常是根据getProtocol()方法 获取到协议是哪一个种类，由协议生成处理类（在后面原码有提现）
@@ -907,7 +907,7 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                 SocketState state = SocketState.CLOSED;
                 do {
                     //拿到处理类后，根据传入的状态 进行对应的socket处理
-                    // 注意 如果是 ws协议 ，会先由http协议升级为ws协议
+                    // 注意 如果是 ws协议 ，会先由http协议升级为ws协议9
                     // 那么 返回状态 会是 UPGRADING，
                     // 而且在处理过程中，他们会将serverEndpointConfig  配置信息，也在个方法中 通过过滤器，生成好 ，并且赋值给 WsHttpUpgradeHandler
                     state = processor.process(wrapper, status);

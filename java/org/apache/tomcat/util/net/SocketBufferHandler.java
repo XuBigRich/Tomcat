@@ -29,7 +29,7 @@ public class SocketBufferHandler {
     private volatile ByteBuffer writeBuffer;
 
     private final boolean direct;
-
+    //声明是否使用直接内存（内核内存），还是使用jvm内存 （用户内存）
     public SocketBufferHandler(int readBufferSize, int writeBufferSize,
             boolean direct) {
         this.direct = direct;

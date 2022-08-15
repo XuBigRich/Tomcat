@@ -1212,6 +1212,7 @@ public abstract class AbstractEndpoint<S> {
             if (sc == null) {
                 //这个地方生成处理http请求类
 //                sc就是 处理http请求的类
+                //创建一个socketProcessor类，里面存有socketWrapper包装类  这个包装类 前面讲过、存有内存 socket 、 endpoint 对象 ，现在加一个处理事件 （读取、写入等）
                 sc = createSocketProcessor(socketWrapper, event);
             } else {
                 sc.reset(socketWrapper, event);
@@ -1220,6 +1221,7 @@ public abstract class AbstractEndpoint<S> {
             Executor executor = getExecutor();
             if (dispatch && executor != null) {
                 //由线程池执行处理http请求类，因为这个处理类是实现了runnable接口，可以有线程池去执行（增快速度！！！）
+                //从线程池里面取出一个线程 执行 sc 这个线程任务
                 executor.execute(sc);
             } else {
                 sc.run();

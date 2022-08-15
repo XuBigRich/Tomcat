@@ -55,6 +55,7 @@ public class Nio2Channel implements AsynchronousByteChannel {
             throws IOException {
         this.sc = channel;
         this.socket = socket;
+        //将内存规整，清理到可读写状态
         bufHandler.reset();
     }
 
